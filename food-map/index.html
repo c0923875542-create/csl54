@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>槺榔梧棲美食地圖</title>
+<meta name="description" content="臺中清水槺榔里與梧棲一帶的美食清單，每家附 Google 地圖導航，可離線瀏覽。">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0e6e74" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10181a" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="槺榔美食">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  /* 版面：單欄清單，上方地區篩選，下方「做成 Google 我的地圖」步驟 */
+  :root {
+    --bg: #f3f6f6;
+    --surface: #ffffff;
+    --fg: #17262b;
+    --muted: #55686e;
+    --line: #d6e0e1;
+    --accent: #0e6e74;      /* 港口水色 */
+    --accent-soft: #e0f0f0;
+    --chip-qs: #8a5a12;     /* 清水·槺榔 */
+    --chip-qs-bg: #f7ecd9;
+    --chip-wq: #1d5a8c;     /* 梧棲 */
+    --chip-wq-bg: #e3edf7;
+    --warn: #8a4b00;
+    --warn-bg: #fff3e0;
+    --font-body: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10181a; --surface: #172225; --fg: #e3ecee; --muted: #9db0b5; --line: #2b3a3e;
+      --accent: #5cc3c9; --accent-soft: #1b3436;
+      --chip-qs: #f0c27b; --chip-qs-bg: #3a2c16; --chip-wq: #8fc0ee; --chip-wq-bg: #1a2c3e;
+      --warn: #f3b46b; --warn-bg: #352512;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10181a; --surface: #172225; --fg: #e3ecee; --muted: #9db0b5; --line: #2b3a3e;
+    --accent: #5cc3c9; --accent-soft: #1b3436;
+    --chip-qs: #f0c27b; --chip-qs-bg: #3a2c16; --chip-wq: #8fc0ee; --chip-wq-bg: #1a2c3e;
+    --warn: #f3b46b; --warn-bg: #352512;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 24px 40px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 24px; }
+  h1 { font-size: 1.75rem; line-height: 1.25; margin: 0; text-wrap: balance; }
+  h2 { font-size: 1.2rem; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 62ch; margin-top: 6px; }
+  .notice {
+    background: var(--warn-bg); color: var(--warn);
+    border-radius: 10px; padding: 12px 14px; font-size: 0.92rem;
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filters button {
+    font: inherit; font-size: 0.95rem; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+    border-radius: 999px; padding: 6px 14px; min-height: 40px;
+  }
+  .filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 700; }
+  button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .place {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; display: grid; gap: 8px; min-width: 0;
+  }
+  .place-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+  .place-name { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  .chip { font-size: 0.8rem; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+  .chip.qs { color: var(--chip-qs); background: var(--chip-qs-bg); }
+  .chip.wq { color: var(--chip-wq); background: var(--chip-wq-bg); }
+  .chip.kind { color: var(--muted); background: var(--bg); }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 0.95rem; }
+  dt { color: var(--muted); }
+  dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .tbc { color: var(--warn); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 4px; }
+  .btn-map {
+    display: inline-flex; align-items: center; min-height: 40px; padding: 6px 14px;
+    background: var(--accent); color: var(--surface); border-radius: 8px;
+    text-decoration: none; font-weight: 700; font-size: 0.95rem;
+  }
+  .src { color: var(--muted); font-size: 0.85rem; }
+  .src a { color: inherit; }
+
+  .howto { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+  .howto ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+  .csv-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn-copy {
+    font: inherit; font-weight: 700; cursor: pointer; min-height: 40px; padding: 6px 14px;
+    border-radius: 8px; border: 1px solid var(--accent); color: var(--accent); background: var(--accent-soft);
+  }
+  .copy-status { color: var(--muted); font-size: 0.9rem; }
+  textarea {
+    width: 100%; min-height: 160px; resize: vertical; font-family: var(--font-mono); font-size: 0.78rem;
+    background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+    white-space: pre; overflow-x: auto;
+  }
+  footer { color: var(--muted); font-size: 0.85rem; display: grid; gap: 6px; }
+  footer a { color: inherit; }
+  .install { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .install button {
+    font: inherit; font-weight: 700; cursor: pointer; min-height: 40px; padding: 6px 14px;
+    border-radius: 8px; border: none; background: var(--accent); color: var(--surface);
+  }
+  .install p { color: var(--muted); font-size: 0.9rem; }
+  .offline { background: var(--accent-soft); color: var(--fg); border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; }
+  .btn-dl { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>槺榔・梧棲 美食地圖</h1>
+    <p class="lede">槺榔里在臺中市清水區西南角，西邊是台中港，南邊和梧棲區相鄰。這裡整理里內和梧棲一帶查得到地址的店家，每家都能直接用 Google 地圖導航。</p>
+  </header>
+
+  <div class="install" id="install" hidden>
+    <button type="button" id="install-btn">安裝到主畫面</button>
+    <p>安裝後可以像 App 一樣從主畫面打開，沒有網路也能看清單。</p>
+  </div>
+  <p class="install" id="ios-hint" hidden>iPhone：在 Safari 按「分享」→「加入主畫面」即可安裝。</p>
+  <p class="offline" id="offline" role="status" hidden>目前離線：清單可以照常瀏覽，Google 地圖導航需要網路。</p>
+
+  <p class="notice">營業時間與價格來自網路文章和美食平台，部分資料已有年份，出發前請先用 Google 地圖或電話確認。</p>
+
+  <nav class="filters" aria-label="依地區篩選">
+    <button type="button" id="f-all" data-area="all" aria-pressed="true">全部</button>
+    <button type="button" id="f-qs" data-area="清水區槺榔里" aria-pressed="false">清水・槺榔里</button>
+    <button type="button" id="f-wq" data-area="梧棲區" aria-pressed="false">梧棲</button>
+  </nav>
+
+  <ol class="list" id="list"></ol>
+
+  <section class="howto" aria-labelledby="howto-title">
+    <h2 id="howto-title">做成 Google 我的地圖</h2>
+    <p>把下面的資料匯入「Google 我的地圖」，它會依地址自動標點，手機也能打開、分享給朋友。</p>
+    <ol>
+      <li>按「複製匯入資料」，貼到新的 Google 試算表的 A1 儲存格。</li>
+      <li>開啟 Google 我的地圖（google.com/mymaps），建立新地圖，在圖層按「匯入」。</li>
+      <li>從 Google 雲端硬碟選剛才的試算表。</li>
+      <li>標記位置的欄位選「地址」，標題欄位選「名稱」。</li>
+      <li>匯入後檢查每個標點，漁港那筆只有地名，位置可能需要手動拖到魚市。</li>
+    </ol>
+    <div class="csv-row">
+      <button type="button" class="btn-copy" id="copy-btn">複製匯入資料</button>
+      <a class="btn-dl" href="food-map.csv" download="槺榔梧棲美食.csv">下載 CSV 檔</a>
+      <span class="copy-status" id="copy-status" role="status" aria-live="polite"></span>
+    </div>
+    <label for="csv-text" class="src">匯入資料（CSV 格式，也可以自己選取複製）</label>
+    <textarea id="csv-text" readonly spellcheck="false"></textarea>
+  </section>
+
+  <footer>
+    <p>地區說明：<a href="https://www.qingshui.taichung.gov.tw/1133795/post" target="_blank" rel="noopener">臺中市清水區公所・槺榔里介紹</a></p>
+    <p>槺榔里內能查到地址的餐廳目前只有一家，其餘店家位於梧棲區。</p>
+  </footer>
+</div>
+
+<script>
+  const PLACES = [
+    { name: "木木稻町 Mou Mou bakery and bistro", address: "臺中市清水區四維東路470號1樓", area: "清水區槺榔里", kind: "早午餐／麵包／甜點", hours: "待確認", phone: "", note: "肉桂捲、早午餐、漢堡；寵物友善", src: "https://footinder.app/places/6426d78229ba5eb673cd4589", srcName: "FooTinder" },
+    { name: "天使光環米糕", address: "臺中市梧棲區中央路一段681號", area: "梧棲區", kind: "米糕／肉羹湯", hours: "11:00–19:30", phone: "04-2657-9768", note: "米糕上鋪一整圈焢肉；原名王牌清水筒仔米糕", src: "https://nash.tw/letsgoangelringricegogo/", srcName: "Nash 部落格" },
+    { name: "清水筒仔米糕", address: "臺中市梧棲區文化路二段212號", area: "梧棲區", kind: "米糕／乾麵／肉羹湯", hours: "08:00–19:30（舊資料）", phone: "04-2657-4671", note: "在地 20 多年的老店；價格以現場為準", src: "https://shin.tw/wuci-shimizu-cakes/", srcName: "阿新筆記" },
+    { name: "順興芋冰老店", address: "臺中市梧棲區中央路二段2之7號", area: "梧棲區", kind: "冰品", hours: "10:30–17:30", phone: "", note: "老字號芋冰", src: "https://ifoodie.tw/explore/%E5%8F%B0%E4%B8%AD%E5%B8%82/list/%E6%A2%A7%E6%A3%B2%E4%B8%AD%E5%A4%AE%E8%B7%AF", srcName: "愛食記" },
+    { name: "今日小吃", address: "臺中市梧棲區文化路二段71號", area: "梧棲區", kind: "麵店", hours: "17:00–21:00（週六、日休）", phone: "", note: "只賣晚餐", src: "https://fbuon.com/blog/post/wuqi-todaysnacks", srcName: "天生寶家族" },
+    { name: "鐵將創意鐵板料理", address: "臺中市梧棲區文化路二段63號", area: "梧棲區", kind: "鐵板燒", hours: "待確認", phone: "", note: "附自助吧，一人約 320 元起，適合聚餐", src: "https://taiwan17go.com/w962/", srcName: "熱血台中" },
+    { name: "梧棲小鎮 總店", address: "臺中市梧棲區中興路148號", area: "梧棲區", kind: "伴手禮／鹹蛋糕", hours: "08:00–20:30", phone: "04-2658-4035", note: "海線起家的鹹蛋糕品牌", src: "https://shin.tw/wuchitown/", srcName: "阿新筆記" },
+    { name: "梧棲漁港觀光魚市", address: "臺中市梧棲區梧棲漁港", area: "梧棲區", kind: "海鮮／漁港小吃", hours: "依攤位而定", phone: "", note: "阿姿燒酒螺 10:00–19:00；中港烤魷魚 09:00–20:00", src: "https://gofunit.com/%E6%A2%A7%E6%A3%B2%E6%BC%81%E6%B8%AF/", srcName: "好好玩 FUNIT" },
+  ];
+
+  const listEl = document.getElementById("list");
+  const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const mapUrl = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.name + " " + p.address);
+
+  function render(area) {
+    listEl.replaceChildren();
+    PLACES.filter(p => area === "all" || p.area === area).forEach(p => {
+      const li = mk("li", "place");
+      const head = mk("div", "place-head");
+      head.append(mk("h3", "place-name", p.name), mk("span", "chip " + (p.area === "梧棲區" ? "wq" : "qs"), p.area === "梧棲區" ? "梧棲" : "清水・槺榔里"), mk("span", "chip kind", p.kind));
+      const dl = mk("dl");
+      const row = (k, v) => { const dd = mk("dd", v.includes("待確認") ? "tbc" : "", v); dl.append(mk("dt", "", k), dd); };
+      row("地址", p.address);
+      row("時間", p.hours);
+      if (p.phone) row("電話", p.phone);
+      row("特色", p.note);
+      const actions = mk("div", "actions");
+      const a = mk("a", "btn-map", "在 Google 地圖開啟");
+      a.href = mapUrl(p); a.target = "_blank"; a.rel = "noopener";
+      const src = mk("span", "src", "資料來源：");
+      const sa = mk("a", "", p.srcName); sa.href = p.src; sa.target = "_blank"; sa.rel = "noopener";
+      src.append(sa);
+      actions.append(a, src);
+      li.append(head, dl, actions);
+      listEl.append(li);
+    });
+  }
+
+  document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    render(b.dataset.area);
+  }));
+
+  const q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  const csv = [["名稱", "地址", "地區", "類型", "營業時間", "電話", "備註"]]
+    .concat(PLACES.map(p => [p.name, p.address, p.area, p.kind, p.hours, p.phone, p.note]))
+    .map(r => r.map(q).join(",")).join("\n");
+  const ta = document.getElementById("csv-text");
+  ta.value = csv;
+
+  const status = document.getElementById("copy-status");
+  document.getElementById("copy-btn").addEventListener("click", () => {
+    const fallback = () => { ta.focus(); ta.select(); status.textContent = "已選取全部資料，請按複製。"; };
+    try {
+      navigator.clipboard.writeText(csv).then(() => { status.textContent = "已複製 " + PLACES.length + " 筆資料。"; }, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  render("all");
+
+  // ---------- PWA：離線快取與安裝 ----------
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+  const offlineEl = document.getElementById("offline");
+  const syncOnline = () => { offlineEl.hidden = navigator.onLine; };
+  window.addEventListener("online", syncOnline);
+  window.addEventListener("offline", syncOnline);
+  syncOnline();
+
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  let deferredPrompt = null;
+  const installBox = document.getElementById("install");
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBox.hidden = false;
+  });
+  document.getElementById("install-btn").addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBox.hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { installBox.hidden = true; });
+  if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    document.getElementById("ios-hint").hidden = false;
+  }
+</script>
+</body>
+</html>
