@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="報修登記示範：填寫報修單並查看最近的報修清單。">
+  <meta name="color-scheme" content="light dark">
+  <title>報修登記</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>報修登記</h1>
+    <p class="subtitle">填寫下方表單送出報修，送出後會出現在清單最上方。</p>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="form-title">
+      <h2 id="form-title">新增報修</h2>
+
+      <form id="repair-form" novalidate>
+        <div class="field">
+          <label for="reporter_name">報修人 <span class="req" aria-hidden="true">*</span></label>
+          <input id="reporter_name" name="reporter_name" type="text" maxlength="50"
+                 autocomplete="name" required aria-describedby="reporter_name-error">
+          <p class="field-error" id="reporter_name-error"></p>
+        </div>
+
+        <div class="field">
+          <label for="location">地點或部門 <span class="req" aria-hidden="true">*</span></label>
+          <input id="location" name="location" type="text" maxlength="100"
+                 placeholder="例如：三樓會議室、業務部" required aria-describedby="location-error">
+          <p class="field-error" id="location-error"></p>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="category">類別 <span class="req" aria-hidden="true">*</span></label>
+            <select id="category" name="category" required aria-describedby="category-error">
+              <option value="" selected disabled>請選擇</option>
+              <option value="設備">設備</option>
+              <option value="網路">網路</option>
+              <option value="環境">環境</option>
+              <option value="其他">其他</option>
+            </select>
+            <p class="field-error" id="category-error"></p>
+          </div>
+
+          <div class="field">
+            <label for="urgency">緊急程度 <span class="req" aria-hidden="true">*</span></label>
+            <select id="urgency" name="urgency" required aria-describedby="urgency-error">
+              <option value="低">低</option>
+              <option value="中" selected>中</option>
+              <option value="高">高</option>
+            </select>
+            <p class="field-error" id="urgency-error"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">問題說明 <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="description" name="description" rows="4" maxlength="1000"
+                    placeholder="請描述發生了什麼問題" required
+                    aria-describedby="description-error description-count"></textarea>
+          <div class="field-meta">
+            <p class="field-error" id="description-error"></p>
+            <span class="counter" id="description-count">0 / 1000</span>
+          </div>
+        </div>
+
+        <div id="form-message" class="message" role="status" aria-live="polite" hidden></div>
+
+        <button type="submit" id="submit-btn" class="btn-primary">送出報修</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="list-title">
+      <div class="list-head">
+        <h2 id="list-title">最近 20 筆報修</h2>
+        <button type="button" id="refresh-btn" class="btn-secondary">重新整理</button>
+      </div>
+      <div id="list-message" class="message" role="status" aria-live="polite" hidden></div>
+      <ol id="repair-list" class="repair-list" aria-busy="true"></ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">示範系統，所有資料請使用虛構內容。</footer>
+
+  <!-- supabase-js v2（固定版本並以 SRI 驗證檔案未被竄改） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"
+          integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R"
+          crossorigin="anonymous"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
