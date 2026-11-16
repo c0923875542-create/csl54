@@ -1,0 +1,40 @@
+# 每個交易日自動抓取證交所與公開資訊觀測站資料，更新 data/latest.json
+# 網頁無法直接跨站讀取這兩個網站，所以由這裡在伺服器端抓好，網頁再讀同站的 JSON。
+name: 更新每日股市資料
+
+on:
+  schedule:
+    # 時間為 UTC；台北時間 = UTC + 8。週一到週五：
+    - cron: "47 6 * * 1-5"   # 14:47 收盤行情、重大訊息
+    - cron: "30 7 * * 1-5"   # 15:30 三大法人買賣超（配合公布時間）
+    - cron: "17 13 * * 1-5"  # 21:17 補齊晚間重大訊息與每月成交資訊
+  workflow_dispatch: {}      # 也可以在 Actions 頁面手動執行
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 抓取資料
+        run: node scripts/fetch-data.mjs data/latest.json
+      - name: 有變動才提交
+        run: |
+          if git diff --quiet -- data/latest.json && git ls-files --error-unmatch data/latest.json >/dev/null 2>&1; then
+            echo "資料沒有變動"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json
+          git commit -m "自動更新股市資料 $(TZ=Asia/Taipei date '+%Y-%m-%d %H:%M')"
+          git push

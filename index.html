@@ -103,6 +103,21 @@
   td .star[aria-pressed="true"] { color: #d99a00; }
   .pill { display: inline-block; min-width: 4.8em; padding: 0 6px; border-radius: 6px; font-family: var(--font-num); }
   .pill.up { background: var(--up-soft); } .pill.down { background: var(--down-soft); }
+  .meta { color: var(--muted); font-size: .82rem; font-weight: 400; margin-left: 6px; }
+  .minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .mini { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .mini .label { color: var(--muted); font-size: .82rem; }
+  .mini .value { font-family: var(--font-num); font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .news { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; }
+  .news li { padding: 8px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+  .news .when { color: var(--muted); font-family: var(--font-num); font-size: .85rem; grid-row: span 2; padding-top: 1px; }
+  .news .who { font-weight: 600; font-size: .92rem; }
+  .news .who .code { color: var(--muted); font-family: var(--font-num); font-weight: 400; margin-right: 6px; }
+  .news .what { font-size: .92rem; overflow-wrap: anywhere; }
+  .news li.mine .who::after { content: " ★ 自選"; color: #b07800; font-weight: 400; font-size: .8rem; }
+  .check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; color: var(--muted); }
+  table.left4 th:nth-child(-n+4), table.left4 td:nth-child(-n+4) { text-align: left; }
+  tr.mine td:nth-child(2)::after { content: " ★"; color: #b07800; }
   footer { color: var(--muted); font-size: .82rem; margin-top: 24px; }
   footer p { margin: 4px 0; }
   .loading { padding: 40px 0; text-align: center; color: var(--muted); }
@@ -133,7 +148,7 @@
   </header>
 
   <div id="notice" class="notice" hidden role="status"></div>
-  <div id="loading" class="loading">正在向證交所取得今日資料…</div>
+  <div id="loading" class="loading">正在載入今日資料…</div>
 
   <div id="report" hidden>
     <section class="kpis" aria-label="重點數字">
@@ -165,6 +180,9 @@
         <button role="tab" data-tab="gainers" aria-selected="true" type="button">漲幅前 10</button>
         <button role="tab" data-tab="losers" aria-selected="false" type="button">跌幅前 10</button>
         <button role="tab" data-tab="value" aria-selected="false" type="button">成交值前 10</button>
+        <button role="tab" data-tab="fbuy" aria-selected="false" type="button" data-needs="inst">外資買超</button>
+        <button role="tab" data-tab="fsell" aria-selected="false" type="button" data-needs="inst">外資賣超</button>
+        <button role="tab" data-tab="tbuy" aria-selected="false" type="button" data-needs="inst">投信買超</button>
         <button role="tab" data-tab="watch" aria-selected="false" type="button">自選股 <span id="watchCount"></span></button>
         <button role="tab" data-tab="all" aria-selected="false" type="button">全部個股</button>
       </div>
@@ -177,17 +195,53 @@
       </div>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>代號</th><th>名稱</th><th>收盤</th><th>漲跌</th><th>漲跌幅</th><th>成交金額(億)</th><th>成交量(張)</th><th>自選</th></tr></thead>
+          <thead id="thead"></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
       <p class="empty" id="tableEmpty" hidden></p>
     </section>
+
+    <section class="card" id="instCard" hidden>
+      <h2>三大法人買賣超<span class="meta" id="instDate"></span></h2>
+      <div class="minis" id="instMinis"></div>
+      <p class="empty">個股買賣超排行請看上方「外資買超／外資賣超／投信買超」分頁。</p>
+    </section>
+
+    <section class="card" id="newsCard" hidden>
+      <h2>重大訊息<span class="meta" id="newsMeta"></span></h2>
+      <div class="row">
+        <input type="search" id="newsSearch" placeholder="搜尋代號、公司或主旨，例如：法說會、財報" aria-label="搜尋重大訊息">
+        <label class="check"><input type="checkbox" id="newsMine"> 只看自選股</label>
+      </div>
+      <ul class="news" id="newsList"></ul>
+      <p class="empty" id="newsEmpty" hidden></p>
+    </section>
+
+    <div class="grid2">
+      <section class="card" id="revCard" hidden>
+        <h2>月營收<span class="meta" id="revMeta"></span></h2>
+        <div class="minis" id="revMinis"></div>
+        <div class="tabs" role="tablist" aria-label="月營收排行">
+          <button role="tab" data-rev="top" aria-selected="true" type="button">年增率前 10</button>
+          <button role="tab" data-rev="bottom" aria-selected="false" type="button">年減最多 10</button>
+          <button role="tab" data-rev="watch" aria-selected="false" type="button">自選股</button>
+        </div>
+        <div class="tablewrap"><table><thead><tr><th>代號</th><th>名稱</th><th>營收(億)</th><th>年增率</th><th>月增率</th></tr></thead><tbody id="revBody"></tbody></table></div>
+        <p class="empty" id="revEmpty" hidden></p>
+        <p class="empty">排行只計當月營收 ≥ 1 億元的上市公司。</p>
+      </section>
+      <section class="card" id="divCard" hidden>
+        <h2>除權除息預告</h2>
+        <div class="tablewrap"><table class="left4"><thead><tr><th>日期</th><th>代號</th><th>名稱</th><th>類別</th><th>現金股利(元)</th></tr></thead><tbody id="divBody"></tbody></table></div>
+        <p class="empty" id="divEmpty" hidden></p>
+      </section>
+    </div>
   </div>
 
   <footer>
-    <p>資料來源：臺灣證券交易所 OpenAPI（上市個股日成交、每日收盤指數、每日市場成交資訊）。排行與家數只計四碼普通股，不含 ETF 與權證。</p>
-    <p>漲停／跌停以漲跌幅 ≥ 9.5% 估算。本頁由程式自動產生，僅供參考，不構成任何投資建議。</p>
+    <p>資料來源：臺灣證券交易所（每日收盤行情、市場成交資訊、三大法人買賣超、OpenAPI 月營收與除權息預告）、公開資訊觀測站（即時重大訊息）。每個交易日由 GitHub Actions 自動抓取後更新。排行與家數只計四碼普通股，不含 ETF 與權證。</p>
+    <p>漲停／跌停依前日收盤 ±10% 並按升降單位取價判斷。本頁由程式自動產生，僅供參考，不構成任何投資建議。</p>
     <p>CSV 匯入格式：第一列標題需含「證券代號、證券名稱、收盤價、漲跌價差」，可另含「開盤價、最高價、最低價、成交股數、成交金額」（亦接受證交所英文欄名 Code、Name、ClosingPrice、Change…）。</p>
   </footer>
 </main>
@@ -198,22 +252,23 @@
 (() => {
   "use strict";
   const A = window.StockAnalysis;
-  const API = "https://openapi.twse.com.tw/v1/exchangeReport/";
+  const DATA_URL = "data/latest.json"; // 由 GitHub Actions 每個交易日自動更新（scripts/fetch-data.mjs）
   const $ = (id) => document.getElementById(id);
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
   };
 
-  let report = null, sourceLabel = "", stocksAll = [], tab = "gainers";
+  let report = null, extras = {}, sourceLabel = "", stocksAll = [], tab = "gainers", revTab = "top";
   let watch = new Set(store.get("stock-report:watch", []));
 
   // ---------- 資料取得 ----------
-  async function getJSON(path, ms = 20000) {
+  async function loadData() {
     const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), ms);
+    const t = setTimeout(() => ctl.abort(), 20000);
     try {
-      const res = await fetch(API + path, { signal: ctl.signal, headers: { accept: "application/json" }, cache: "no-store" });
+      const res = await fetch(DATA_URL, { signal: ctl.signal, cache: "no-store" });
+      if (res.status === 404) throw new Error("還沒有產生資料檔（自動抓取尚未執行過）");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
@@ -221,46 +276,45 @@
     } finally { clearTimeout(t); }
   }
 
-  async function loadLive() {
-    showLoading(true); hideNotice();
-    const [stocks, indices, daily] = await Promise.allSettled([
-      getJSON("STOCK_DAY_ALL"), getJSON("MI_INDEX"), getJSON("FMTQIK"),
-    ]);
-    if (stocks.status !== "fulfilled") throw new Error("個股資料：" + stocks.reason.message);
-    const raw = {
-      stocks: stocks.value,
-      indices: indices.status === "fulfilled" ? indices.value : [],
-      daily: daily.status === "fulfilled" ? daily.value : [],
-    };
-    const ok = render(raw, "證交所即時取得", "live");
-    if (ok) store.set("stock-report:last", { at: new Date().toISOString(), raw });
-    const missing = [indices.status !== "fulfilled" && "大盤指數", daily.status !== "fulfilled" && "每日成交"].filter(Boolean);
-    if (ok && missing.length) notice(`部分資料沒取到（${missing.join("、")}），相關區塊會留空。`);
-  }
-
   async function start() {
-    try { await loadLive(); }
-    catch (e) {
+    showLoading(true); hideNotice();
+    try {
+      const data = await loadData();
+      const when = data.fetchedAt ? new Date(data.fetchedAt).toLocaleString("zh-TW", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+      if (render(data, `每日自動更新${when ? "（" + when + " 抓取）" : ""}`, "live")) {
+        store.set("stock-report:last", { at: new Date().toISOString(), data });
+        if (data.errors && data.errors.length) notice("部分資料暫時無法取得：" + data.errors.map((e) => e.source).join("、") + "。相關區塊會留空或改用備援來源。");
+      }
+    } catch (e) {
       const last = store.get("stock-report:last", null);
-      if (last && last.raw) {
-        render(last.raw, `上次快取（${new Date(last.at).toLocaleString("zh-TW")} 取得）`, "cache");
-        notice(`無法連線證交所（${e.message}），先顯示上次取得的資料。`, true);
+      if (last && last.data) {
+        render(last.data, `上次快取（${new Date(last.at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false })} 取得）`, "cache");
+        notice(`無法載入最新資料（${e.message}），先顯示上次取得的資料。`, true);
       } else {
         showLoading(false);
-        notice(`無法連線證交所（${e.message}）。可能是網路離線、證交所暫時無回應，或瀏覽器阻擋跨站請求。你可以稍後重試、匯入 CSV，或先看示範資料。`, true, true);
+        notice(`無法載入資料（${e.message}）。可能是網路離線，或網站剛建立、自動抓取還沒執行。你可以稍後重試、匯入 CSV，或先看示範資料。`, true, true);
       }
     }
   }
 
   // ---------- 繪製 ----------
-  function render(raw, label, kind) {
+  // data 格式同 data/latest.json：{ market: { stocks, indices, daily }, institutional?, news?, revenue?, dividends? }
+  function render(data, label, kind) {
     try {
-      const stocks = A.normalizeStocks(raw.stocks);
-      const indices = A.normalizeIndices(raw.indices);
-      const daily = A.normalizeDaily(raw.daily);
-      const date = A.normDate(raw.stocks[0] && (raw.stocks[0].Date || raw.stocks[0].日期)) || null;
-      report = A.analyze({ stocks, indices, daily, date });
+      const m = data.market || {};
+      const stocks = A.normalizeStocks(m.stocks);
+      const date = (m.date && A.normDate(m.date)) || A.normDate(m.stocks[0] && (m.stocks[0].Date || m.stocks[0].日期)) || null;
+      report = A.analyze({ stocks, indices: A.normalizeIndices(m.indices || []), daily: A.normalizeDaily(m.daily || []), date });
       stocksAll = stocks.filter(A.isCommonStock);
+      const map = new Map(stocks.map((s) => [s.code, s]));
+      const today = report.date || new Date().toISOString().slice(0, 10);
+      extras = {
+        inst: A.analyzeInstitutional(data.institutional, map),
+        news: data.news ? data.news.items || [] : null, newsInfo: data.news || null,
+        revenue: A.analyzeRevenue(data.revenue),
+        dividends: data.dividends ? A.upcomingDividends(data.dividends, today) : null,
+      };
+      extras.summary = A.summarizeExtras({ inst: extras.inst, revenue: extras.revenue, news: extras.news, dividends: extras.dividends, reportDate: report.date });
     } catch (e) {
       showLoading(false);
       notice("資料無法分析：" + e.message, true, true);
@@ -270,17 +324,23 @@
     $("reportDate").textContent = report.date ? report.date + " 收盤" : "日期未知";
     const b = $("sourceBadge");
     b.textContent = label; b.className = "badge" + (kind === "sample" ? " demo" : "");
-    if (kind !== "cache" && kind !== "live") hideNotice();
+    if (kind === "sample" || kind === "csv") hideNotice();
     if (kind === "sample") notice("目前顯示的是虛構示範資料，公司名稱與數字皆非真實。");
     showLoading(false);
     $("report").hidden = false;
+    if (!extras.inst && /^(fbuy|fsell|tbuy)$/.test(tab)) selectTab("gainers");
+    document.querySelectorAll('.tabs button[data-needs="inst"]').forEach((x) => (x.hidden = !extras.inst || !extras.inst.foreignBuy.length));
     renderKpis(); renderSummary(); renderTaiex(); renderDist(); renderTable();
+    renderInst(); renderNews(); renderRevenue(); renderDividends();
     return true;
   }
 
   const cls = (n) => (n > 0 ? "up" : n < 0 ? "down" : "flat");
   const arrow = (n) => (n > 0 ? "▲" : n < 0 ? "▼" : "－");
   const f2 = (n) => n.toLocaleString("zh-TW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const lots = (shares) => Math.round(shares / 1000).toLocaleString("zh-TW");
+  const pctCell = (p) => `<span class="pill ${cls(p)}">${p === null || p === undefined ? "—" : A.fmtPct(p)}</span>`;
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
   function renderKpis() {
     const r = report, t = r.taiex;
@@ -303,10 +363,8 @@
   }
 
   function renderSummary() {
-    $("summary").innerHTML = report.summary.map((l) => `<li>${esc(l)}</li>`).join("");
+    $("summary").innerHTML = report.summary.concat(extras.summary || []).map((l) => `<li>${esc(l)}</li>`).join("");
   }
-
-  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
   function tipFor(box) {
     let tip = box.querySelector(".tip");
@@ -394,41 +452,122 @@
     });
   }
 
-  function rowsForTab() {
-    const q = $("search").value.trim().toLowerCase();
-    switch (tab) {
-      case "gainers": return report.gainers;
-      case "losers": return report.losers;
-      case "value": return report.byValue;
-      case "watch": return stocksAll.filter((s) => watch.has(s.code));
-      case "all": return stocksAll.filter((s) => !q || s.code.includes(q) || s.name.toLowerCase().includes(q)).slice(0, q ? 200 : 100);
-    }
-    return [];
-  }
-
-  function renderTable() {
-    const rows = rowsForTab();
-    $("searchRow").hidden = tab !== "all";
-    $("watchRow").hidden = tab !== "watch";
-    $("watchCount").textContent = watch.size ? `(${watch.size})` : "";
-    $("tbody").innerHTML = rows.map((s) => `<tr>
+  // ---------- 排行表 ----------
+  const star = (code, name) => `<button class="star" type="button" data-code="${esc(code)}" aria-pressed="${watch.has(code)}" aria-label="${watch.has(code) ? "移出" : "加入"}自選：${esc(name)}">${watch.has(code) ? "★" : "☆"}</button>`;
+  const QUOTE_HEAD = "<tr><th>代號</th><th>名稱</th><th>收盤</th><th>漲跌</th><th>漲跌幅</th><th>成交金額(億)</th><th>成交量(張)</th><th>自選</th></tr>";
+  const quoteRow = (s) => `<tr>
       <td class="code">${esc(s.code)}</td><td>${esc(s.name)}</td>
       <td>${s.close === null ? "—" : f2(s.close)}</td>
       <td class="${cls(s.change)}">${s.change === null ? "—" : arrow(s.change) + " " + f2(Math.abs(s.change))}</td>
-      <td><span class="pill ${cls(s.pct)}">${s.pct === null ? "—" : A.fmtPct(s.pct)}</span></td>
-      <td>${(s.value / 1e8).toFixed(2)}</td>
-      <td>${Math.round(s.volume / 1000).toLocaleString("zh-TW")}</td>
-      <td><button class="star" type="button" data-code="${esc(s.code)}" aria-pressed="${watch.has(s.code)}" aria-label="${watch.has(s.code) ? "移出" : "加入"}自選：${esc(s.name)}">${watch.has(s.code) ? "★" : "☆"}</button></td></tr>`).join("");
+      <td>${pctCell(s.pct)}</td><td>${(s.value / 1e8).toFixed(2)}</td><td>${lots(s.volume)}</td><td>${star(s.code, s.name)}</td></tr>`;
+  const INST_HEAD = (who) => `<tr><th>代號</th><th>名稱</th><th>收盤</th><th>漲跌幅</th><th>${who}買賣超(張)</th><th>三大法人合計(張)</th><th>自選</th></tr>`;
+  const instRow = (k) => (r) => `<tr>
+      <td class="code">${esc(r.code)}</td><td>${esc(r.name)}</td><td>${r.close === null ? "—" : f2(r.close)}</td><td>${pctCell(r.pct)}</td>
+      <td class="${cls(r[k])}">${r[k] > 0 ? "+" : ""}${lots(r[k])}</td><td class="${cls(r.total)}">${r.total > 0 ? "+" : ""}${lots(r.total)}</td><td>${star(r.code, r.name)}</td></tr>`;
+
+  function tableSpec() {
+    const q = $("search").value.trim().toLowerCase();
+    const i = extras.inst;
+    switch (tab) {
+      case "gainers": return [QUOTE_HEAD, report.gainers, quoteRow];
+      case "losers": return [QUOTE_HEAD, report.losers, quoteRow];
+      case "value": return [QUOTE_HEAD, report.byValue, quoteRow];
+      case "fbuy": return [INST_HEAD("外資"), i ? i.foreignBuy : [], instRow("foreign")];
+      case "fsell": return [INST_HEAD("外資"), i ? i.foreignSell : [], instRow("foreign")];
+      case "tbuy": return [INST_HEAD("投信"), i ? i.trustBuy : [], instRow("trust")];
+      case "watch": return [QUOTE_HEAD, stocksAll.filter((s) => watch.has(s.code)), quoteRow];
+      case "all": return [QUOTE_HEAD, stocksAll.filter((s) => !q || s.code.includes(q) || s.name.toLowerCase().includes(q)).slice(0, q ? 200 : 100), quoteRow];
+    }
+    return [QUOTE_HEAD, [], quoteRow];
+  }
+
+  function renderTable() {
+    const [head, rows, row] = tableSpec();
+    $("searchRow").hidden = tab !== "all";
+    $("watchRow").hidden = tab !== "watch";
+    $("watchCount").textContent = watch.size ? `(${watch.size})` : "";
+    $("thead").innerHTML = head;
+    $("tbody").innerHTML = rows.map(row).join("");
     const empty = $("tableEmpty");
     empty.hidden = rows.length > 0;
     empty.textContent = tab === "watch" ? (watch.size ? "自選股今日沒有成交資料。" : "還沒有自選股，輸入代號或在其他排行按 ☆ 加入。") : tab === "all" ? "找不到符合的個股。" : "沒有符合的個股。";
+    if (/^(fbuy|fsell|tbuy)$/.test(tab) && extras.inst && extras.inst.date !== report.date) {
+      empty.hidden = false; empty.textContent = `三大法人資料日期為 ${extras.inst.date}（當日資料約 15:00 後公布），收盤價與漲跌幅為 ${report.date}。`;
+    }
     if (tab === "all" && !$("search").value.trim() && stocksAll.length > 100) { empty.hidden = false; empty.textContent = `共 ${stocksAll.length} 檔，先顯示前 100 檔，請用搜尋找其他個股。`; }
+  }
+
+  function selectTab(name) {
+    tab = name;
+    document.querySelectorAll(".tabs button[data-tab]").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.tab === name)));
+  }
+
+  // ---------- 三大法人 ----------
+  function renderInst() {
+    const i = extras.inst;
+    $("instCard").hidden = !i;
+    if (!i) return;
+    $("instDate").textContent = i.date + (i.date !== report.date ? "（當日資料約 15:00 後公布）" : "");
+    const yi = (n) => `<span class="${cls(n)}">${n > 0 ? "+" : ""}${(n / 1e8).toLocaleString("zh-TW", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} 億</span>`;
+    $("instMinis").innerHTML = [["外資及陸資", i.foreign], ["投信", i.trust], ["自營商", i.dealer], ["合計", i.total]]
+      .map(([l, n]) => `<div class="mini"><div class="label">${l}${n > 0 ? "（買超）" : n < 0 ? "（賣超）" : ""}</div><div class="value">${yi(n)}</div></div>`).join("");
+  }
+
+  // ---------- 重大訊息 ----------
+  function renderNews() {
+    const all = extras.news;
+    $("newsCard").hidden = !all;
+    if (!all) return;
+    const info = extras.newsInfo;
+    $("newsMeta").textContent = `${all.length} 則・${info.source || ""}`;
+    const q = $("newsSearch").value.trim().toLowerCase();
+    const mine = $("newsMine").checked;
+    const list = all.filter((n) => (!mine || watch.has(n.code)) && (!q || n.code.includes(q) || n.name.toLowerCase().includes(q) || n.subject.toLowerCase().includes(q)));
+    $("newsList").innerHTML = list.map((n) => `<li class="${watch.has(n.code) ? "mine" : ""}">
+      <span class="when">${esc(n.date && n.date !== report.date ? n.date.slice(5) + " " : "")}${esc(n.time.slice(0, 5))}</span>
+      <span class="who"><span class="code">${esc(n.code)}</span>${esc(n.name)}</span>
+      <span class="what">${esc(n.subject)}</span></li>`).join("");
+    const e = $("newsEmpty");
+    e.hidden = list.length > 0;
+    e.textContent = all.length ? (mine ? "自選股今天沒有重大訊息。" : "找不到符合的訊息。") : "今天目前沒有重大訊息。";
+  }
+
+  // ---------- 月營收 ----------
+  function renderRevenue() {
+    const r = extras.revenue;
+    $("revCard").hidden = !r;
+    if (!r) return;
+    $("revMeta").textContent = `${r.ym}・已公布 ${r.count} 家`;
+    $("revMinis").innerHTML = `<div class="mini"><div class="label">年增／年減（家）</div><div class="value"><span class="up">${r.up}</span> / <span class="down">${r.down}</span></div></div>
+      <div class="mini"><div class="label">年增率中位數</div><div class="value ${cls(r.median)}">${r.median === null ? "—" : A.fmtPct(r.median, 1)}</div></div>`;
+    const rows = revTab === "top" ? r.topYoy : revTab === "bottom" ? r.bottomYoy : r.items.filter((x) => watch.has(x.code));
+    const p1 = (v) => (v === null ? "—" : A.fmtPct(v, 1));
+    $("revBody").innerHTML = rows.map((x) => `<tr class="${watch.has(x.code) ? "mine" : ""}"><td class="code">${esc(x.code)}</td><td>${esc(x.name)}</td>
+      <td>${(x.revenue / 1e5).toLocaleString("zh-TW", { maximumFractionDigits: 2 })}</td>
+      <td class="${cls(x.yoy)}">${p1(x.yoy)}</td><td class="${cls(x.mom)}">${p1(x.mom)}</td></tr>`).join("");
+    const e = $("revEmpty");
+    e.hidden = rows.length > 0;
+    e.textContent = revTab === "watch" ? "自選股中沒有已公布營收的上市公司。" : "沒有資料。";
+  }
+
+  // ---------- 除權息 ----------
+  function renderDividends() {
+    const d = extras.dividends;
+    $("divCard").hidden = !d;
+    if (!d) return;
+    const rows = d.slice(0, 20);
+    $("divBody").innerHTML = rows.map((x) => `<tr class="${watch.has(x.code) ? "mine" : ""}"><td class="code">${esc(x.date.slice(5))}</td><td class="code">${esc(x.code)}</td><td>${esc(x.name)}</td>
+      <td>${esc(x.type)}</td><td>${x.cash === null || x.cash === 0 ? "—" : x.cash.toLocaleString("zh-TW", { maximumFractionDigits: 4 })}</td></tr>`).join("");
+    const e = $("divEmpty");
+    e.hidden = rows.length > 0;
+    e.textContent = "近期沒有普通股除權息。";
+    if (d.length > rows.length) { e.hidden = false; e.textContent = `共 ${d.length} 檔，顯示最近 ${rows.length} 檔。`; }
   }
 
   function toggleWatch(code) {
     watch.has(code) ? watch.delete(code) : watch.add(code);
     store.set("stock-report:watch", [...watch]);
-    renderTable();
+    renderTable(); renderNews(); renderRevenue(); renderDividends();
   }
 
   // ---------- 通知與狀態 ----------
@@ -443,7 +582,7 @@
 
   // ---------- 事件 ----------
   $("btnRefresh").addEventListener("click", start);
-  $("btnSample").addEventListener("click", () => render(window.STOCK_SAMPLE, "示範資料（虛構）", "sample"));
+  $("btnSample").addEventListener("click", () => render({ market: window.STOCK_SAMPLE }, "示範資料（虛構）", "sample"));
   $("btnPrint").addEventListener("click", () => window.print());
   $("notice").addEventListener("click", (e) => {
     const a = e.target.dataset && e.target.dataset.act;
@@ -456,12 +595,13 @@
     if (!file) return;
     try {
       const rows = A.parseCSV(await file.text());
-      render({ stocks: rows, indices: [], daily: [] }, `匯入：${file.name}`, "csv");
+      render({ market: { stocks: rows } }, `匯入：${file.name}`, "csv");
     } catch (err) { notice("CSV 讀取失敗：" + err.message, true); }
   });
   $("btnExport").addEventListener("click", () => {
     if (!report) { notice("目前沒有報告可下載。", true); return; }
-    const blob = new Blob([A.toMarkdown(report, sourceLabel)], { type: "text/markdown;charset=utf-8" });
+    const md = A.toMarkdown(report, sourceLabel, { extraSummary: extras.summary, inst: extras.inst, news: extras.news, revenue: extras.revenue, dividends: extras.dividends });
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob); a.download = `stock-report-${report.date || "undated"}.md`; // 用英數檔名，部分瀏覽器會丟掉中文檔名
     document.body.appendChild(a); a.click(); a.remove();
@@ -479,15 +619,21 @@
   });
   document.querySelector(".tabs").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tab]"); if (!b) return;
-    tab = b.dataset.tab;
-    document.querySelectorAll(".tabs button").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
-    renderTable();
+    selectTab(b.dataset.tab); renderTable();
+  });
+  document.querySelector("#revCard .tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-rev]"); if (!b) return;
+    revTab = b.dataset.rev;
+    document.querySelectorAll("#revCard .tabs button").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+    renderRevenue();
   });
   $("search").addEventListener("input", renderTable);
+  $("newsSearch").addEventListener("input", renderNews);
+  $("newsMine").addEventListener("change", renderNews);
   $("tbody").addEventListener("click", (e) => { const b = e.target.closest(".star"); if (b) toggleWatch(b.dataset.code); });
   const addWatch = () => {
-    const code = $("watchInput").value.trim();
-    if (!/^\d{4,6}[A-Z]?$/i.test(code)) { notice("請輸入 4～6 碼的股票代號。", true); return; }
+    const code = $("watchInput").value.trim().toUpperCase();
+    if (!/^\d{4,6}[A-Z]?$/.test(code)) { notice("請輸入 4～6 碼的股票代號。", true); return; }
     if (!watch.has(code)) toggleWatch(code);
     $("watchInput").value = ""; hideNotice();
   };

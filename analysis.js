@@ -99,7 +99,25 @@
   // 只看一般股票（四碼數字代號），排除 ETF、權證等，避免排行被槓桿型商品洗版
   function isCommonStock(s) { return /^[1-9]\d{3}$/.test(s.code); }
 
-  const LIMIT_PCT = 9.5; // 台股漲跌幅限制 10%，四捨五入到檔位後實際約 9.5% 以上即視為漲停／跌停
+  const LIMIT_PCT = 9.5; // 沒有前日收盤可推算時，才用「漲跌幅 ≥ 9.5%」估算漲停／跌停
+
+  // 台股股票升降單位（ETF 不同，但排行只計普通股）
+  function tickOf(p) { return p < 10 ? 0.01 : p < 50 ? 0.05 : p < 100 ? 0.1 : p < 500 ? 0.5 : p < 1000 ? 1 : 5; }
+  // 漲跌停價：前日收盤 ±10%，漲停向下、跌停向上取到該價位的升降單位
+  function limitPrices(prev) {
+    const snap = (raw, dir) => {
+      const t = tickOf(raw);
+      const v = (dir > 0 ? Math.floor : Math.ceil)(+(raw / t).toFixed(6)) * t;
+      return +v.toFixed(2);
+    };
+    return { up: snap(prev * 1.1, 1), down: snap(prev * 0.9, -1) };
+  }
+  function isLimit(s, dir) {
+    if (s.close === null || s.pct === null) return false;
+    if (!(s.prevClose > 0)) return dir > 0 ? s.pct >= LIMIT_PCT : s.pct <= -LIMIT_PCT;
+    const l = limitPrices(s.prevClose);
+    return dir > 0 ? s.close >= l.up - 1e-9 : s.close <= l.down + 1e-9;
+  }
 
   // 漲跌幅分布：固定區間，0 單獨一格
   const BINS = [
@@ -124,8 +142,8 @@
     const up = traded.filter((s) => s.change > 0).length;
     const down = traded.filter((s) => s.change < 0).length;
     const flat = traded.length - up - down;
-    const limitUp = traded.filter((s) => s.pct >= LIMIT_PCT);
-    const limitDown = traded.filter((s) => s.pct <= -LIMIT_PCT);
+    const limitUp = traded.filter((s) => s.change > 0 && isLimit(s, 1));
+    const limitDown = traded.filter((s) => s.change < 0 && isLimit(s, -1));
     const totalValue = all.reduce((a, s) => a + (s.value || 0), 0);
 
     const byPct = traded.slice().sort((a, b) => b.pct - a.pct);
@@ -198,7 +216,7 @@
     }
     lines.push(vol + "。");
     if (a.limitUp.length || a.limitDown.length) {
-      lines.push(`漲停（≥${LIMIT_PCT}%）${a.limitUp.length} 檔、跌停 ${a.limitDown.length} 檔。`);
+      lines.push(`漲停 ${a.limitUp.length} 檔、跌停 ${a.limitDown.length} 檔。`);
     }
     if (a.byValue.length) {
       lines.push(`成交值前三名：${a.byValue.slice(0, 3).map((s) => `${s.name}（${s.pct === null ? "—" : fmtPct(s.pct)}）`).join("、")}。`);
@@ -236,15 +254,100 @@
     return rows.slice(1).map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? "").trim()])));
   }
 
-  function toMarkdown(a, sourceLabel) {
+  function toMarkdown(a, sourceLabel, x = {}) {
+    const md = (s) => String(s).replace(/\|/g, "／").replace(/\s+/g, " ");
     const t = (list) => ["| 代號 | 名稱 | 收盤 | 漲跌幅 | 成交金額(億) |", "|---|---|---:|---:|---:|",
-      ...list.map((s) => `| ${s.code} | ${s.name} | ${s.close ?? "—"} | ${s.pct === null ? "—" : fmtPct(s.pct)} | ${(s.value / 1e8).toFixed(2)} |`)].join("\n");
-    return [`# 每日股市分析報告 ${a.date || ""}`, "", `資料來源：${sourceLabel}`, "",
-      "## 市場摘要", "", ...a.summary.map((l) => "- " + l), "",
+      ...list.map((s) => `| ${s.code} | ${md(s.name)} | ${s.close ?? "—"} | ${s.pct === null ? "—" : fmtPct(s.pct)} | ${(s.value / 1e8).toFixed(2)} |`)].join("\n");
+    const out = [`# 每日股市分析報告 ${a.date || ""}`, "", `資料來源：${sourceLabel}`, "",
+      "## 市場摘要", "", ...a.summary.concat(x.extraSummary || []).map((l) => "- " + l), "",
       "## 漲幅前 10", "", t(a.gainers), "", "## 跌幅前 10", "", t(a.losers), "",
-      "## 成交值前 10", "", t(a.byValue), "",
-      "> 本報告由程式依公開資料自動產生，僅供參考，不構成投資建議。", ""].join("\n");
+      "## 成交值前 10", "", t(a.byValue), ""];
+    if (x.inst) {
+      const it = (list) => ["| 代號 | 名稱 | 買賣超(張) | 漲跌幅 |", "|---|---|---:|---:|",
+        ...list.map((r) => `| ${r.code} | ${md(r.name)} | ${Math.round(r.foreign / 1000).toLocaleString("zh-TW")} | ${r.pct === null ? "—" : fmtPct(r.pct)} |`)].join("\n");
+      out.push(`## 外資買超前 10（${x.inst.date}）`, "", it(x.inst.foreignBuy), "", `## 外資賣超前 10（${x.inst.date}）`, "", it(x.inst.foreignSell), "");
+    }
+    if (x.news && x.news.length) {
+      out.push("## 重大訊息", "", ...x.news.map((n) => `- ${n.time} ${n.code} ${md(n.name)}：${md(n.subject)}`), "");
+    }
+    if (x.revenue) {
+      out.push(`## ${x.revenue.ym} 月營收年增率前 10（當月營收 ≥ 1 億元）`, "", "| 代號 | 名稱 | 產業 | 當月營收(億) | 年增率 |", "|---|---|---|---:|---:|",
+        ...x.revenue.topYoy.map((r) => `| ${r.code} | ${md(r.name)} | ${md(r.industry)} | ${(r.revenue / 1e5).toFixed(2)} | ${fmtPct(r.yoy, 1)} |`), "");
+    }
+    if (x.dividends && x.dividends.length) {
+      out.push("## 除權息預告", "", "| 日期 | 代號 | 名稱 | 類別 | 現金股利(元) |", "|---|---|---|---|---:|",
+        ...x.dividends.slice(0, 30).map((d) => `| ${d.date} | ${d.code} | ${md(d.name)} | ${d.type} | ${d.cash ?? "—"} |`), "");
+    }
+    out.push("> 本報告由程式依公開資料自動產生，僅供參考，不構成投資建議。", "");
+    return out.join("\n");
   }
 
-  return { num, normDate, normalizeStocks, normalizeIndices, normalizeDaily, isCommonStock, analyze, summarize, parseCSV, toMarkdown, LIMIT_PCT, fmtPct };
+  // ---------- 延伸資料（由 scripts/fetch-data.mjs 整理成精簡格式後存進 data/latest.json） ----------
+
+  // 三大法人：summary 單位為元；stocks 為 [代號, 名稱, 外資, 投信, 自營商, 合計]（單位：股）
+  function analyzeInstitutional(inst, stockMap) {
+    if (!inst || !inst.summary) return null;
+    const rows = (inst.stocks || []).map(([code, name, foreign, trust, dealer, total]) => {
+      const s = stockMap.get(code);
+      return { code, name, foreign, trust, dealer, total, close: s ? s.close : null, pct: s ? s.pct : null, change: s ? s.change : null };
+    }).filter((r) => /^[1-9]\d{3}$/.test(r.code));
+    const by = (k, dir) => rows.filter((r) => (dir > 0 ? r[k] > 0 : r[k] < 0)).sort((a, b) => dir * (b[k] - a[k])).slice(0, 10);
+    return {
+      date: inst.date, ...inst.summary,
+      foreignBuy: by("foreign", 1), foreignSell: by("foreign", -1),
+      trustBuy: by("trust", 1), trustSell: by("trust", -1),
+    };
+  }
+
+  // 月營收：items 為 [代號, 名稱, 產業, 當月營收(千元), 年增率%, 月增率%, 累計年增率%]
+  function analyzeRevenue(rev, minRevenue = 100000 /* 千元＝1 億元 */) {
+    if (!rev || !Array.isArray(rev.items) || !rev.items.length) return null;
+    const items = rev.items.map(([code, name, industry, revenue, yoy, mom, cumYoy]) => ({ code, name, industry, revenue, yoy, mom, cumYoy }))
+      .filter((r) => r.revenue !== null && r.yoy !== null);
+    const big = items.filter((r) => r.revenue >= minRevenue);
+    const up = items.filter((r) => r.yoy > 0).length;
+    const yoys = items.map((r) => r.yoy).sort((a, b) => a - b);
+    const median = yoys.length ? (yoys.length % 2 ? yoys[yoys.length >> 1] : (yoys[yoys.length / 2 - 1] + yoys[yoys.length / 2]) / 2) : null;
+    return {
+      ym: rev.ym, count: items.length, up, down: items.filter((r) => r.yoy < 0).length, median,
+      topYoy: big.slice().sort((a, b) => b.yoy - a.yoy).slice(0, 10),
+      bottomYoy: big.slice().sort((a, b) => a.yoy - b.yoy).slice(0, 10),
+      items,
+    };
+  }
+
+  // 除權息預告：只留今天（含）以後，依日期排序
+  function upcomingDividends(div, today) {
+    if (!div || !Array.isArray(div.items)) return [];
+    return div.items.filter((d) => d.date && (!today || d.date >= today) && /^[1-9]\d{3}$/.test(d.code))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.code.localeCompare(b.code));
+  }
+
+  const yiSigned = (n) => (n > 0 ? "買超 " : n < 0 ? "賣超 " : "") + (Math.abs(n) / 1e8).toFixed(1) + " 億元";
+  function summarizeExtras({ inst, revenue, news, dividends, reportDate }) {
+    const lines = [];
+    if (inst) {
+      lines.push(`三大法人合計${yiSigned(inst.total)}：外資${yiSigned(inst.foreign)}、投信${yiSigned(inst.trust)}、自營商${yiSigned(inst.dealer)}。`);
+      if (inst.foreignBuy.length && inst.foreignSell.length) {
+        lines.push(`外資買超最多：${inst.foreignBuy.slice(0, 3).map((r) => r.name).join("、")}；賣超最多：${inst.foreignSell.slice(0, 3).map((r) => r.name).join("、")}。`);
+      }
+    }
+    if (news && news.length) {
+      const dates = [...new Set(news.map((n) => n.date).filter(Boolean))];
+      lines.push(dates.length === 1 && dates[0] !== reportDate ? `${dates[0]} 重大訊息 ${news.length} 則。` : `今日重大訊息 ${news.length} 則。`);
+    }
+    if (dividends && dividends.length) {
+      const first = dividends[0].date;
+      const n = dividends.filter((d) => d.date === first).length;
+      lines.push(`下一個除權息日 ${first}，共 ${n} 檔普通股。`);
+    }
+    if (revenue) {
+      lines.push(`${revenue.ym} 月營收已公布 ${revenue.count} 家，年增 ${revenue.up} 家、年減 ${revenue.down} 家` +
+        (revenue.median !== null ? `，年增率中位數 ${fmtPct(revenue.median, 1)}` : "") + "。");
+    }
+    return lines;
+  }
+
+  return { num, normDate, normalizeStocks, normalizeIndices, normalizeDaily, isCommonStock, analyze, summarize, parseCSV, toMarkdown, LIMIT_PCT, limitPrices, fmtPct,
+    analyzeInstitutional, analyzeRevenue, upcomingDividends, summarizeExtras };
 });
