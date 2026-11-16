@@ -1,6 +1,6 @@
 // 每日股市分析報告：離線快取（只快取網頁本身；證交所資料不經此快取，改由頁面存上次結果）
 // 更新網頁內容時，請把 CACHE 的版本號加 1，讓使用者拿到新版。
-const CACHE = "stock-report-v1";
+const CACHE = "stock-report-v2";
 const ASSETS = [
   "./", "./index.html", "./analysis.js", "./sample-data.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png",
