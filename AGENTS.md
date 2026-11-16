@@ -9,7 +9,7 @@
 
 ## 技術與結構
 - 純靜態網頁，無建置步驟與套件：`index.html`（介面）、`analysis.js`（資料正規化與分析，純函式）、`sample-data.js`、`sw.js`（離線快取）、`manifest.webmanifest`、`icons/`。
-- 證交所與公開資訊觀測站都不允許網頁跨站讀取，所以由 `scripts/fetch-data.mjs`（Node 22，無套件）在 GitHub Actions（`.github/workflows/update-data.yml`，交易日 14:47、16:23、21:17）抓好，寫入 `data/latest.json`，網頁只讀這個同站檔案。
+- 證交所與公開資訊觀測站都不允許網頁跨站讀取，所以由 `scripts/fetch-data.mjs`（Node 22，無套件）在 GitHub Actions（`.github/workflows/update-data.yml`，交易日 14:47、15:30、21:17）抓好，寫入 `data/latest.json`，網頁只讀這個同站檔案。
 - 資料來源：證交所主站 `afterTrading/MI_INDEX`（全部收盤行情）、`afterTrading/FMTQIK`、`fund/BFI82U`、`fund/T86`；OpenAPI `STOCK_DAY_ALL`、`MI_INDEX`（備援）、`opendata/t187ap05_L`（月營收）、`exchangeReport/TWT48U_ALL`（除權息）、`opendata/t187ap04_L`（重大訊息備援）；公開資訊觀測站 `mopsov.twse.com.tw/mops/web/ajax_t05sr01_1`（即時重大訊息）。欄位名稱可能變動，解析時要容錯。
 - 證交所主站有頻率限制（請求間隔至少 2.5 秒）；公開資訊觀測站短時間查詢太多次會暫時封鎖，被擋時不要重試。
 - 每個資料來源各自獨立，失敗記在 `errors`，只有個股行情全部失敗才算抓取失敗。
