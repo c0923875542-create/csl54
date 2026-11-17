@@ -6,26 +6,30 @@
 <title>槺榔梧棲美食地圖</title>
 <meta name="description" content="臺中清水槺榔里、中社路與梧棲一帶的美食清單：營業中判斷、收藏與路線規劃、Google 地圖導航，可離線瀏覽。">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#0e6e74" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#10181a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0a3350" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#04101a" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="槺榔美食">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-  /* 版面：手機優先單欄。頂部搜尋與篩選，中間店家卡片，底部收藏路線與匯出 */
+  /* 版面：手機優先單欄。海港色調：頂部深海色橫幅（燈塔＋浪），下方海霧底色上的店家卡片；
+     主色是港口深藍，浮標橘只用在收藏與重點 */
   :root {
-    --bg: #f3f6f6;
+    --bg: #eef3f7;          /* 海霧 */
     --surface: #ffffff;
-    --fg: #17262b;
-    --muted: #55686e;
-    --line: #d6e0e1;
-    --accent: #0e6e74;      /* 港口水色 */
+    --fg: #0f2233;
+    --muted: #4f6475;
+    --line: #d3dee7;
+    --accent: #0b4f7a;      /* 港口深藍 */
     --accent-fg: #ffffff;
-    --accent-soft: #e0f0f0;
+    --accent-soft: #e2eef6;
+    --buoy: #d9512a;        /* 浮標橘 */
+    --sea-deep: #0a3350; --sea: #145c87; --sea-light: #3b8fc2; --foam: #ffffff;
+    --hero-fg: #ffffff; --hero-muted: #c7dceb;
     --area-1: #8a5a12; --area-1-bg: #f7ecd9;   /* 槺榔里 */
     --area-2: #7a3e6e; --area-2-bg: #f4e4f0;   /* 中社路 */
     --area-3: #1d5a8c; --area-3-bg: #e3edf7;   /* 梧棲市區 */
@@ -35,33 +39,37 @@
     --closed: #8b2f24; --closed-bg: #fbe8e5;
     --unknown: #5c6670; --unknown-bg: #eceff2;
     --warn: #8a4b00; --warn-bg: #fff3e0;
-    --star: #c98a00;
-    --ill-bg: #f6efe2; --ill-ink: #3b2f28; --ill-steam: #c9bfae;
+    --star: var(--buoy);
+    --ill-bg: #f4efe6; --ill-ink: #3b2f28; --ill-steam: #b9c4cc;
     --font-body: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
     --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #10181a; --surface: #172225; --fg: #e3ecee; --muted: #9db0b5; --line: #2b3a3e;
-      --accent: #5cc3c9; --accent-fg: #0b1517; --accent-soft: #1b3436;
+      --bg: #08141d; --surface: #0f202c; --fg: #e4eef5; --muted: #93a8b8; --line: #1f3444;
+      --accent: #6cb8e6; --accent-fg: #04121c; --accent-soft: #12324a;
+      --buoy: #ff8a5c; --sea-deep: #04101a; --sea: #0b2e47; --sea-light: #1d5a82; --foam: #cfe3f1;
+      --hero-fg: #eaf4fb; --hero-muted: #9fbbd0;
       --area-1: #f0c27b; --area-1-bg: #3a2c16; --area-2: #e6a6d9; --area-2-bg: #3a2236;
       --area-3: #8fc0ee; --area-3-bg: #1a2c3e; --area-4: #8fd8b0; --area-4-bg: #173527;
       --area-5: #c0b3f0; --area-5-bg: #2a2440;
       --open: #8fd6a6; --open-bg: #173322; --closed: #f2a39a; --closed-bg: #3a1a17;
-      --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512; --star: #f2c14e;
-      --ill-bg: #2a2723; --ill-ink: #cfc4b5; --ill-steam: #7d7468;
+      --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512;
+      --ill-bg: #1c2a33; --ill-ink: #cfc4b5; --ill-steam: #6f8291;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #10181a; --surface: #172225; --fg: #e3ecee; --muted: #9db0b5; --line: #2b3a3e;
-    --accent: #5cc3c9; --accent-fg: #0b1517; --accent-soft: #1b3436;
+    --bg: #08141d; --surface: #0f202c; --fg: #e4eef5; --muted: #93a8b8; --line: #1f3444;
+    --accent: #6cb8e6; --accent-fg: #04121c; --accent-soft: #12324a;
+    --buoy: #ff8a5c; --sea-deep: #04101a; --sea: #0b2e47; --sea-light: #1d5a82; --foam: #cfe3f1;
+    --hero-fg: #eaf4fb; --hero-muted: #9fbbd0;
     --area-1: #f0c27b; --area-1-bg: #3a2c16; --area-2: #e6a6d9; --area-2-bg: #3a2236;
     --area-3: #8fc0ee; --area-3-bg: #1a2c3e; --area-4: #8fd8b0; --area-4-bg: #173527;
     --area-5: #c0b3f0; --area-5-bg: #2a2440;
     --open: #8fd6a6; --open-bg: #173322; --closed: #f2a39a; --closed-bg: #3a1a17;
-    --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512; --star: #f2c14e;
-    --ill-bg: #2a2723; --ill-ink: #cfc4b5; --ill-steam: #7d7468;
+    --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512;
+    --ill-bg: #1c2a33; --ill-ink: #cfc4b5; --ill-steam: #6f8291;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
@@ -69,18 +77,44 @@
   body {
     margin: 0; background: var(--bg); color: var(--fg);
     font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+    padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+  }
+  .gutter {
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
-    padding-block: max(20px, env(safe-area-inset-top, 0px)) max(40px, env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 頂部海港橫幅 */
+  .hero { background: linear-gradient(180deg, var(--sea-deep) 0%, var(--sea) 100%); color: var(--hero-fg); position: relative; }
+  .hero-inner {
+    max-width: 760px; margin: 0 auto;
+    padding-top: max(28px, calc(env(safe-area-inset-top, 0px) + 16px)); padding-bottom: 40px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: end;
+  }
+  .hero-text { min-width: 0; display: grid; gap: 6px; }
+  .eyebrow { font-size: 0.8rem; letter-spacing: 0.12em; color: var(--hero-muted); font-weight: 700; }
+  .hero h1 { font-size: clamp(1.7rem, 7vw, 2.4rem); font-weight: 900; letter-spacing: 0.02em; }
+  .hero .lede { color: var(--hero-muted); }
+  .hero-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .hero-stats span {
+    font-size: 0.82rem; padding: 2px 10px; border-radius: 999px; font-variant-numeric: tabular-nums;
+    background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.22); color: var(--hero-fg);
+  }
+  .lighthouse { width: 76px; height: auto; align-self: end; margin-bottom: -6px; }
+  .waves { display: block; width: 100%; height: 36px; position: absolute; left: 0; bottom: -2px; }
+  @media (max-width: 380px) { .lighthouse { width: 56px; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .beam { transform-origin: 38px 30px; animation: sweep 6s ease-in-out infinite; }
+    @keyframes sweep { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.6; } }
   }
   [hidden] { display: none !important; }
-  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; padding-top: 16px; }
+  .wrap, .hero-inner { box-sizing: content-box; }
   h1 { font-size: 1.75rem; line-height: 1.25; margin: 0; text-wrap: balance; }
-  h2 { font-size: 1.2rem; margin: 0; text-wrap: balance; }
+  h2 { font-size: 1.2rem; margin: 0; text-wrap: balance; color: var(--accent); }
   p { margin: 0; }
   a { color: var(--accent); }
   .lede { color: var(--muted); max-width: 62ch; margin-top: 6px; }
-  .meta-line { color: var(--muted); font-size: 0.85rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .notice { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 0.9rem; }
   .offline { background: var(--accent-soft); color: var(--fg); border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; }
   .install { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
@@ -128,7 +162,7 @@
     padding: 14px 16px; display: grid; gap: 8px; min-width: 0;
   }
   .figure { margin: -14px -16px 2px; position: relative; border-radius: 12px 12px 0 0; overflow: hidden; background: var(--ill-bg); }
-  .figure svg, .figure img { display: block; width: 100%; height: auto; aspect-ratio: 320 / 140; max-width: 100%; object-fit: cover; }
+  .figure svg, .figure img { display: block; width: 100%; max-width: 100%; height: clamp(140px, 36vw, 190px); object-fit: cover; }
   .figure figcaption {
     position: absolute; right: 8px; bottom: 6px; font-size: 0.72rem; padding: 1px 8px; border-radius: 999px;
     background: var(--surface); color: var(--muted); opacity: 0.92;
@@ -192,12 +226,32 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>槺榔・梧棲 美食地圖</h1>
-    <p class="lede">槺榔里在臺中市清水區西南角，西邊是台中港，北鄰中社里、南接梧棲區。這裡整理附近查得到地址的店家：中社路的早餐擀麵、清水與梧棲的牛肉麵、梧棲老街與文化路小吃、漁港海鮮和三井 OUTLET。</p>
-    <p class="meta-line" id="meta-line"></p>
-  </header>
+<header class="hero">
+  <div class="hero-inner gutter">
+    <div class="hero-text">
+      <p class="eyebrow">台中港邊・清水與梧棲</p>
+      <h1>槺榔・梧棲 美食地圖</h1>
+      <p class="lede">槺榔里在臺中市清水區西南角，西邊是台中港，北鄰中社里、南接梧棲區。這裡整理附近查得到地址的店家：中社路的早餐擀麵、清水與梧棲的牛肉麵、梧棲老街與文化路小吃、漁港海鮮和三井 OUTLET。</p>
+      <div class="hero-stats" id="meta-line"></div>
+    </div>
+    <svg class="lighthouse" viewBox="0 0 76 150" aria-hidden="true" focusable="false">
+      <path class="beam" d="M38 30L-40 6v48z M38 30l78-24v48z" fill="#ffe7a3" opacity="0.35"/>
+      <path d="M26 46h24l8 96H18z" fill="#ffffff"/>
+      <path d="M24.6 64h26.8l1.6 20H23z M22.4 98h31.2l1.6 20H20.8z" fill="#d9512a"/>
+      <rect x="22" y="40" width="32" height="8" rx="2" fill="#0f2233"/>
+      <rect x="27" y="22" width="22" height="18" rx="3" fill="#ffe7a3" stroke="#0f2233" stroke-width="3"/>
+      <path d="M24 22l14-12 14 12z" fill="#d9512a" stroke="#0f2233" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="33" y="122" width="10" height="20" rx="2" fill="#0f2233"/>
+      <path d="M8 142h60v8H8z" fill="#5d6f7d"/>
+    </svg>
+  </div>
+  <svg class="waves" viewBox="0 0 400 34" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path d="M0 14c25 0 25-10 50-10s25 10 50 10 25-10 50-10 25 10 50 10 25-10 50-10 25 10 50 10 25-10 50-10 25 10 50 10v20H0z" fill="var(--sea-light)" opacity="0.55"/>
+    <path d="M0 22c25 0 25-9 50-9s25 9 50 9 25-9 50-9 25 9 50 9 25-9 50-9 25 9 50 9 25-9 50-9 25 9 50 9v12H0z" fill="var(--bg)"/>
+  </svg>
+</header>
+
+<div class="wrap gutter">
 
   <div class="install" id="install" hidden>
     <button type="button" class="btn-solid" id="install-btn">安裝到主畫面</button>
@@ -536,7 +590,8 @@
   });
 
   // ---------- 頁首資訊 ----------
-  $("meta-line").textContent = "共 " + DATA.places.length + " 家・" + DATA.areas.length + " 個區域・資料整理於 " + DATA.updated;
+  ["共 " + DATA.places.length + " 家", DATA.areas.length + " 個區域", "資料整理於 " + DATA.updated]
+    .forEach(t => $("meta-line").append(mk("span", "", t)));
 
   // 每分鐘更新營業狀態
   setInterval(() => { if (!document.hidden) origRender(); }, 60000);
