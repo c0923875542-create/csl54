@@ -1,6 +1,6 @@
 // 槺榔梧棲美食地圖：離線快取
 // 更新網頁內容時，請把 CACHE 的版本號加 1，讓使用者拿到新版。
-const CACHE = "food-map-v2";
+const CACHE = "food-map-v3";
 const ASSETS = [
   "./",
   "./index.html",
