@@ -2,6 +2,10 @@
 // ・營業時間來自網路文章與美食平台，可能已變動；不確定的寫「待確認」，hours 留空陣列。
 // ・hours 格式：[星期陣列, "開始", "結束"]，星期 0＝週日、1＝週一 … 6＝週六；"24:00" 表示午夜。
 // ・closedKnown：true 表示公休日已知（hours 未列出的日子就是公休）；false 表示公休日不明。
+// ・圖片：沒有照片時，卡片會顯示該類型的示意插圖（illustrations.js）。
+//   要放自己拍的照片：把照片存成 photos/店家id.webp（建議寬 960px），再在該店加上
+//   photo: "photos/店家id.webp", photoAlt: "照片內容說明", photoCredit: "拍攝者"
+//   請勿使用網路上他人的照片。
 // ・修改這個檔案後，請把 sw.js 的 CACHE 版本號加 1，並重新產生 food-map.csv。
 window.FOOD_DATA = {
   updated: "2026-11-17",

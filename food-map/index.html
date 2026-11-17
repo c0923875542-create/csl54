@@ -36,6 +36,7 @@
     --unknown: #5c6670; --unknown-bg: #eceff2;
     --warn: #8a4b00; --warn-bg: #fff3e0;
     --star: #c98a00;
+    --ill-bg: #f6efe2; --ill-ink: #3b2f28; --ill-steam: #c9bfae;
     --font-body: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
     --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   }
@@ -48,6 +49,7 @@
       --area-5: #c0b3f0; --area-5-bg: #2a2440;
       --open: #8fd6a6; --open-bg: #173322; --closed: #f2a39a; --closed-bg: #3a1a17;
       --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512; --star: #f2c14e;
+      --ill-bg: #2a2723; --ill-ink: #cfc4b5; --ill-steam: #7d7468;
       color-scheme: dark;
     }
   }
@@ -59,6 +61,7 @@
     --area-5: #c0b3f0; --area-5-bg: #2a2440;
     --open: #8fd6a6; --open-bg: #173322; --closed: #f2a39a; --closed-bg: #3a1a17;
     --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512; --star: #f2c14e;
+    --ill-bg: #2a2723; --ill-ink: #cfc4b5; --ill-steam: #7d7468;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
@@ -123,6 +126,12 @@
   .place {
     background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
     padding: 14px 16px; display: grid; gap: 8px; min-width: 0;
+  }
+  .figure { margin: -14px -16px 2px; position: relative; border-radius: 12px 12px 0 0; overflow: hidden; background: var(--ill-bg); }
+  .figure svg, .figure img { display: block; width: 100%; height: auto; aspect-ratio: 320 / 140; max-width: 100%; object-fit: cover; }
+  .figure figcaption {
+    position: absolute; right: 8px; bottom: 6px; font-size: 0.72rem; padding: 1px 8px; border-radius: 999px;
+    background: var(--surface); color: var(--muted); opacity: 0.92;
   }
   .place-top { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
   .place-title { min-width: 0; display: grid; gap: 6px; }
@@ -255,6 +264,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="places.js"></script>
+<script src="illustrations.js"></script>
 <script>
 (function () {
   "use strict";
@@ -327,9 +337,31 @@
     catch (e) { if (fallbackEl) { fallbackEl.focus(); fallbackEl.select(); } toast("請手動選取後複製"); return false; }
   }
 
+  // ---------- 圖片：有店家照片用照片，沒有就用該類型的示意插圖 ----------
+  function figure(p) {
+    const fig = mk("figure", "figure");
+    if (p.photo) {
+      const img = document.createElement("img");
+      img.src = p.photo; img.alt = p.photoAlt || p.name; img.loading = "lazy"; img.decoding = "async";
+      img.width = 640; img.height = 280;
+      img.addEventListener("error", () => { fig.replaceChildren(); illustrate(fig, p); }, { once: true });
+      fig.append(img, mk("figcaption", "", p.photoCredit ? "照片：" + p.photoCredit : "店家照片"));
+    } else {
+      illustrate(fig, p);
+    }
+    return fig;
+  }
+  function illustrate(fig, p) {
+    const art = (window.FOOD_ILLUSTRATIONS || {})[p.kind];
+    if (!art) { fig.hidden = true; return; }
+    fig.insertAdjacentHTML("afterbegin", art); // 固定的原創插圖字串，不含使用者資料
+    fig.append(mk("figcaption", "", "示意圖・" + p.kind));
+  }
+
   // ---------- 卡片 ----------
   function card(p, now) {
     const li = mk("li", "place"); li.id = "p-" + p.id;
+    li.append(figure(p));
     const top = mk("div", "place-top");
     const title = mk("div", "place-title");
     title.append(mk("h3", "place-name", p.name));

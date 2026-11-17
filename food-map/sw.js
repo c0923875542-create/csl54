@@ -1,11 +1,12 @@
 // 槺榔梧棲美食地圖：離線快取
 // 更新網頁內容時，請把 CACHE 的版本號加 1，讓使用者拿到新版。
-const CACHE = "food-map-v3";
+const CACHE = "food-map-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./places.js",
+  "./illustrations.js",
   "./food-map.csv",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -38,6 +39,16 @@ self.addEventListener("fetch", (event) => {
           return res;
         })
         .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+  // photos/ 底下的店家照片：看過一次就存起來，離線也能顯示
+  if (new URL(req.url).pathname.includes("/photos/")) {
+    event.respondWith(
+      caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+        if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+        return res;
+      }))
     );
     return;
   }
