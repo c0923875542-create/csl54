@@ -3,7 +3,7 @@
 // 食物本身的顏色固定，在兩種主題下都清楚。viewBox 統一為 320×140。
 window.FOOD_ILLUSTRATIONS = (function () {
   const wrap = (body) =>
-    '<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">' +
+    '<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet">' +
     '<rect width="320" height="140" fill="var(--ill-bg)"/>' + body + "</svg>";
   const steam = (x) =>
     '<g fill="none" stroke="var(--ill-steam)" stroke-width="4" stroke-linecap="round">' +
