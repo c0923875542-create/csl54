@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>槺榔梧棲美食地圖</title>
-<meta name="description" content="臺中清水槺榔里與梧棲一帶的美食清單，每家附 Google 地圖導航，可離線瀏覽。">
+<meta name="description" content="臺中清水槺榔里、中社路與梧棲一帶的美食清單：營業中判斷、收藏與路線規劃、Google 地圖導航，可離線瀏覽。">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#0e6e74" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#10181a" media="(prefers-color-scheme: dark)">
@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-title" content="槺榔美食">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-  /* 版面：單欄清單，上方地區篩選，下方「做成 Google 我的地圖」步驟 */
+  /* 版面：手機優先單欄。頂部搜尋與篩選，中間店家卡片，底部收藏路線與匯出 */
   :root {
     --bg: #f3f6f6;
     --surface: #ffffff;
@@ -24,252 +24,512 @@
     --muted: #55686e;
     --line: #d6e0e1;
     --accent: #0e6e74;      /* 港口水色 */
+    --accent-fg: #ffffff;
     --accent-soft: #e0f0f0;
-    --chip-qs: #8a5a12;     /* 清水·槺榔 */
-    --chip-qs-bg: #f7ecd9;
-    --chip-wq: #1d5a8c;     /* 梧棲 */
-    --chip-wq-bg: #e3edf7;
-    --warn: #8a4b00;
-    --warn-bg: #fff3e0;
+    --area-1: #8a5a12; --area-1-bg: #f7ecd9;   /* 槺榔里 */
+    --area-2: #7a3e6e; --area-2-bg: #f4e4f0;   /* 中社路 */
+    --area-3: #1d5a8c; --area-3-bg: #e3edf7;   /* 梧棲市區 */
+    --area-4: #1f6b4a; --area-4-bg: #e1f1e8;   /* 漁港與三井 */
+    --open: #1e7a3c; --open-bg: #e3f4e8;
+    --closed: #8b2f24; --closed-bg: #fbe8e5;
+    --unknown: #5c6670; --unknown-bg: #eceff2;
+    --warn: #8a4b00; --warn-bg: #fff3e0;
+    --star: #c98a00;
     --font-body: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
     --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #10181a; --surface: #172225; --fg: #e3ecee; --muted: #9db0b5; --line: #2b3a3e;
-      --accent: #5cc3c9; --accent-soft: #1b3436;
-      --chip-qs: #f0c27b; --chip-qs-bg: #3a2c16; --chip-wq: #8fc0ee; --chip-wq-bg: #1a2c3e;
-      --warn: #f3b46b; --warn-bg: #352512;
+      --accent: #5cc3c9; --accent-fg: #0b1517; --accent-soft: #1b3436;
+      --area-1: #f0c27b; --area-1-bg: #3a2c16; --area-2: #e6a6d9; --area-2-bg: #3a2236;
+      --area-3: #8fc0ee; --area-3-bg: #1a2c3e; --area-4: #8fd8b0; --area-4-bg: #173527;
+      --open: #8fd6a6; --open-bg: #173322; --closed: #f2a39a; --closed-bg: #3a1a17;
+      --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512; --star: #f2c14e;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --bg: #10181a; --surface: #172225; --fg: #e3ecee; --muted: #9db0b5; --line: #2b3a3e;
-    --accent: #5cc3c9; --accent-soft: #1b3436;
-    --chip-qs: #f0c27b; --chip-qs-bg: #3a2c16; --chip-wq: #8fc0ee; --chip-wq-bg: #1a2c3e;
-    --warn: #f3b46b; --warn-bg: #352512;
+    --accent: #5cc3c9; --accent-fg: #0b1517; --accent-soft: #1b3436;
+    --area-1: #f0c27b; --area-1-bg: #3a2c16; --area-2: #e6a6d9; --area-2-bg: #3a2236;
+    --area-3: #8fc0ee; --area-3-bg: #1a2c3e; --area-4: #8fd8b0; --area-4-bg: #173527;
+    --open: #8fd6a6; --open-bg: #173322; --closed: #f2a39a; --closed-bg: #3a1a17;
+    --unknown: #a9b4bf; --unknown-bg: #232c33; --warn: #f3b46b; --warn-bg: #352512; --star: #f2c14e;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; }
-  [hidden] { display: none !important; }
   body {
-    background: var(--bg); color: var(--fg);
+    margin: 0; background: var(--bg); color: var(--fg);
     font-family: var(--font-body); font-size: 16px; line-height: 1.6;
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
-    padding-block: 24px 40px;
+    padding-block: max(20px, env(safe-area-inset-top, 0px)) max(40px, env(safe-area-inset-bottom, 0px));
   }
-  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 24px; }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
   h1 { font-size: 1.75rem; line-height: 1.25; margin: 0; text-wrap: balance; }
   h2 { font-size: 1.2rem; margin: 0; text-wrap: balance; }
   p { margin: 0; }
+  a { color: var(--accent); }
   .lede { color: var(--muted); max-width: 62ch; margin-top: 6px; }
-  .notice {
-    background: var(--warn-bg); color: var(--warn);
-    border-radius: 10px; padding: 12px 14px; font-size: 0.92rem;
-  }
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
-  .filters button {
-    font: inherit; font-size: 0.95rem; cursor: pointer;
-    border: 1px solid var(--line); background: var(--surface); color: var(--fg);
-    border-radius: 999px; padding: 6px 14px; min-height: 40px;
-  }
-  .filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 700; }
-  button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .meta-line { color: var(--muted); font-size: 0.85rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .notice { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 0.9rem; }
+  .offline { background: var(--accent-soft); color: var(--fg); border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; }
+  .install { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .install p, .hint { color: var(--muted); font-size: 0.9rem; }
 
+  button, .btn { font: inherit; cursor: pointer; }
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+  .btn-solid, .btn-line {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 40px; padding: 6px 14px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; text-decoration: none;
+  }
+  .btn-solid { background: var(--accent); color: var(--accent-fg); border: 1px solid var(--accent); }
+  .btn-line { background: var(--surface); color: var(--accent); border: 1px solid var(--line); }
+  .btn-line[aria-pressed="true"] { border-color: var(--star); color: var(--star); }
+
+  /* 搜尋與篩選 */
+  .controls { display: grid; gap: 10px; }
+  .search { position: relative; }
+  .search input {
+    width: 100%; font: inherit; font-size: 16px; color: var(--fg); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 40px 10px 12px; min-height: 46px;
+  }
+  .search button {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    border: none; background: none; color: var(--muted); width: 38px; height: 38px; font-size: 1.2rem;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button {
+    border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+    border-radius: 999px; padding: 4px 13px; min-height: 36px; font-size: 0.92rem;
+  }
+  .chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 700; }
+  .chips .count { opacity: 0.75; font-variant-numeric: tabular-nums; margin-left: 2px; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  .toggles label { display: inline-flex; gap: 6px; align-items: center; min-height: 36px; cursor: pointer; }
+  .toggles input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .result-line { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+  /* 店家卡片 */
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   .place {
     background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px; display: grid; gap: 8px; min-width: 0;
+    padding: 14px 16px; display: grid; gap: 8px; min-width: 0;
   }
-  .place-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
-  .place-name { font-size: 1.1rem; font-weight: 700; margin: 0; }
-  .chip { font-size: 0.8rem; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
-  .chip.qs { color: var(--chip-qs); background: var(--chip-qs-bg); }
-  .chip.wq { color: var(--chip-wq); background: var(--chip-wq-bg); }
-  .chip.kind { color: var(--muted); background: var(--bg); }
+  .place-top { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
+  .place-title { min-width: 0; display: grid; gap: 6px; }
+  .place-name { font-size: 1.1rem; font-weight: 700; margin: 0; line-height: 1.35; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 0.8rem; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+  .tag.kind { color: var(--muted); background: var(--bg); }
+  .tag.a-kanglang { color: var(--area-1); background: var(--area-1-bg); }
+  .tag.a-zhongshe { color: var(--area-2); background: var(--area-2-bg); }
+  .tag.a-wuqi { color: var(--area-3); background: var(--area-3-bg); }
+  .tag.a-harbor { color: var(--area-4); background: var(--area-4-bg); }
+  .status { font-weight: 700; }
+  .status.open { color: var(--open); background: var(--open-bg); }
+  .status.closed { color: var(--closed); background: var(--closed-bg); }
+  .status.unknown { color: var(--unknown); background: var(--unknown-bg); font-weight: 400; }
+  .fav {
+    flex: none; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--muted); font-size: 1.35rem; line-height: 1;
+  }
+  .fav[aria-pressed="true"] { color: var(--star); border-color: var(--star); }
   dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 0.95rem; }
   dt { color: var(--muted); }
   dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
   .tbc { color: var(--warn); }
-  .actions { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 4px; }
-  .btn-map {
-    display: inline-flex; align-items: center; min-height: 40px; padding: 6px 14px;
-    background: var(--accent); color: var(--surface); border-radius: 8px;
-    text-decoration: none; font-weight: 700; font-size: 0.95rem;
-  }
-  .src { color: var(--muted); font-size: 0.85rem; }
+  .addr { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+  .copy-addr { border: none; background: none; color: var(--accent); padding: 0; font-size: 0.85rem; text-decoration: underline; min-height: 24px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 2px; }
+  .map-box { border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
+  .map-box iframe { display: block; width: 100%; height: 240px; border: 0; }
+  .map-box p { padding: 12px; color: var(--muted); font-size: 0.9rem; }
+  .src { color: var(--muted); font-size: 0.82rem; }
   .src a { color: inherit; }
+  .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 20px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
 
-  .howto { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
-  .howto ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
-  .csv-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .btn-copy {
-    font: inherit; font-weight: 700; cursor: pointer; min-height: 40px; padding: 6px 14px;
-    border-radius: 8px; border: 1px solid var(--accent); color: var(--accent); background: var(--accent-soft);
-  }
-  .copy-status { color: var(--muted); font-size: 0.9rem; }
+  /* 收藏路線、匯出 */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+  .panel ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .status-msg { color: var(--muted); font-size: 0.9rem; }
   textarea {
-    width: 100%; min-height: 160px; resize: vertical; font-family: var(--font-mono); font-size: 0.78rem;
+    width: 100%; min-height: 140px; resize: vertical; font-family: var(--font-mono); font-size: 0.78rem;
     background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 10px;
     white-space: pre; overflow-x: auto;
   }
+  details > summary { cursor: pointer; font-weight: 700; min-height: 32px; }
   footer { color: var(--muted); font-size: 0.85rem; display: grid; gap: 6px; }
   footer a { color: inherit; }
-  .install { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
-  .install button {
-    font: inherit; font-weight: 700; cursor: pointer; min-height: 40px; padding: 6px 14px;
-    border-radius: 8px; border: none; background: var(--accent); color: var(--surface);
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 0.92rem;
+    max-width: calc(100% - 32px); z-index: 20;
   }
-  .install p { color: var(--muted); font-size: 0.9rem; }
-  .offline { background: var(--accent-soft); color: var(--fg); border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; }
-  .btn-dl { color: var(--accent); font-weight: 700; }
+  @media (prefers-reduced-motion: no-preference) {
+    .place { transition: border-color 0.15s; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>槺榔・梧棲 美食地圖</h1>
-    <p class="lede">槺榔里在臺中市清水區西南角，西邊是台中港，南邊和梧棲區相鄰。這裡整理里內和梧棲一帶查得到地址的店家，每家都能直接用 Google 地圖導航。</p>
+    <p class="lede">槺榔里在臺中市清水區西南角，西邊是台中港，北鄰中社里、南接梧棲區。這裡整理附近查得到地址的店家：中社路的早餐擀麵、梧棲老街與文化路小吃、漁港海鮮和三井 OUTLET。</p>
+    <p class="meta-line" id="meta-line"></p>
   </header>
 
   <div class="install" id="install" hidden>
-    <button type="button" id="install-btn">安裝到主畫面</button>
+    <button type="button" class="btn-solid" id="install-btn">安裝到主畫面</button>
     <p>安裝後可以像 App 一樣從主畫面打開，沒有網路也能看清單。</p>
   </div>
-  <p class="install" id="ios-hint" hidden>iPhone：在 Safari 按「分享」→「加入主畫面」即可安裝。</p>
-  <p class="offline" id="offline" role="status" hidden>目前離線：清單可以照常瀏覽，Google 地圖導航需要網路。</p>
+  <p class="hint" id="ios-hint" hidden>iPhone：在 Safari 按「分享」→「加入主畫面」即可安裝。</p>
+  <p class="offline" id="offline" role="status" hidden>目前離線：清單和收藏可以照常使用，地圖與導航需要網路。</p>
 
-  <p class="notice">營業時間與價格來自網路文章和美食平台，部分資料已有年份，出發前請先用 Google 地圖或電話確認。</p>
-
-  <nav class="filters" aria-label="依地區篩選">
-    <button type="button" id="f-all" data-area="all" aria-pressed="true">全部</button>
-    <button type="button" id="f-qs" data-area="清水區槺榔里" aria-pressed="false">清水・槺榔里</button>
-    <button type="button" id="f-wq" data-area="梧棲區" aria-pressed="false">梧棲</button>
-  </nav>
+  <section class="controls" aria-label="搜尋與篩選">
+    <div class="search">
+      <label for="q" class="hint" hidden>搜尋店家</label>
+      <input id="q" type="search" placeholder="搜尋店名、料理或路名（例：擀麵）" autocomplete="off" enterkeyhint="search" aria-label="搜尋店家">
+      <button type="button" id="q-clear" aria-label="清除搜尋" hidden>×</button>
+    </div>
+    <div class="chips" id="area-chips" role="group" aria-label="地區"></div>
+    <div class="chips" id="kind-chips" role="group" aria-label="類型"></div>
+    <div class="toggles">
+      <label><input type="checkbox" id="only-open"> 只看現在營業中</label>
+      <label><input type="checkbox" id="only-fav"> 只看收藏</label>
+    </div>
+    <p class="result-line" id="result-line" role="status" aria-live="polite"></p>
+  </section>
 
   <ol class="list" id="list"></ol>
 
-  <section class="howto" aria-labelledby="howto-title">
-    <h2 id="howto-title">做成 Google 我的地圖</h2>
-    <p>把下面的資料匯入「Google 我的地圖」，它會依地址自動標點，手機也能打開、分享給朋友。</p>
-    <ol>
-      <li>按「複製匯入資料」，貼到新的 Google 試算表的 A1 儲存格。</li>
-      <li>開啟 Google 我的地圖（google.com/mymaps），建立新地圖，在圖層按「匯入」。</li>
-      <li>從 Google 雲端硬碟選剛才的試算表。</li>
-      <li>標記位置的欄位選「地址」，標題欄位選「名稱」。</li>
-      <li>匯入後檢查每個標點，漁港那筆只有地名，位置可能需要手動拖到魚市。</li>
-    </ol>
-    <div class="csv-row">
-      <button type="button" class="btn-copy" id="copy-btn">複製匯入資料</button>
-      <a class="btn-dl" href="food-map.csv" download="槺榔梧棲美食.csv">下載 CSV 檔</a>
-      <span class="copy-status" id="copy-status" role="status" aria-live="polite"></span>
+  <p class="notice">營業時間、公休與價格來自網路文章和美食平台，部分資料已有年份；「營業中」只依這些時間推算，出發前請先用 Google 地圖或電話確認。</p>
+
+  <section class="panel" aria-labelledby="route-title">
+    <h2 id="route-title">收藏路線</h2>
+    <p id="route-desc">按店家右上角的 ☆ 收藏，就能一次規劃路線，從你目前的位置依序前往。</p>
+    <div class="row">
+      <a class="btn-solid" id="route-btn" href="#" target="_blank" rel="noopener" hidden>用 Google 地圖規劃路線</a>
+      <button type="button" class="btn-line" id="fav-clear" hidden>清除收藏</button>
     </div>
-    <label for="csv-text" class="src">匯入資料（CSV 格式，也可以自己選取複製）</label>
-    <textarea id="csv-text" readonly spellcheck="false"></textarea>
+  </section>
+
+  <section class="panel" aria-labelledby="howto-title">
+    <h2 id="howto-title">做成 Google 我的地圖</h2>
+    <p>把資料匯入「Google 我的地圖」，它會依地址自動標點，手機打開、分享都方便。</p>
+    <ol>
+      <li>按「下載 CSV 檔」，或「複製匯入資料」後貼到新的 Google 試算表 A1。</li>
+      <li>開啟 Google 我的地圖（google.com/mymaps），建立新地圖，在圖層按「匯入」。</li>
+      <li>選擇 CSV 檔或剛才的試算表。</li>
+      <li>標記位置的欄位選「地址」，標題欄位選「名稱」。</li>
+      <li>匯入後檢查標點；漁港那筆只有地名，位置可能需要手動拖到魚市。</li>
+    </ol>
+    <div class="row">
+      <a class="btn-line" href="food-map.csv" download="槺榔梧棲美食.csv">下載 CSV 檔</a>
+      <button type="button" class="btn-line" id="copy-btn">複製匯入資料</button>
+      <span class="status-msg" id="copy-status" role="status" aria-live="polite"></span>
+    </div>
+    <details>
+      <summary>查看匯入資料</summary>
+      <textarea id="csv-text" readonly spellcheck="false" aria-label="匯入資料（CSV）"></textarea>
+    </details>
   </section>
 
   <footer>
-    <p>地區說明：<a href="https://www.qingshui.taichung.gov.tw/1133795/post" target="_blank" rel="noopener">臺中市清水區公所・槺榔里介紹</a></p>
-    <p>槺榔里內能查到地址的餐廳目前只有一家，其餘店家位於梧棲區。</p>
+    <div class="row"><button type="button" class="btn-line" id="share-btn">分享這個頁面</button></div>
+    <p>地區說明：<a href="https://www.qingshui.taichung.gov.tw/1133795/post" target="_blank" rel="noopener">臺中市清水區公所・槺榔里介紹</a>。各店資料來源列在每張卡片下方。</p>
+    <p>發現資料錯誤或歇業，歡迎回報，會在下次更新修正。</p>
   </footer>
 </div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="places.js"></script>
 <script>
-  const PLACES = [
-    { name: "木木稻町 Mou Mou bakery and bistro", address: "臺中市清水區四維東路470號1樓", area: "清水區槺榔里", kind: "早午餐／麵包／甜點", hours: "待確認", phone: "", note: "肉桂捲、早午餐、漢堡；寵物友善", src: "https://footinder.app/places/6426d78229ba5eb673cd4589", srcName: "FooTinder" },
-    { name: "天使光環米糕", address: "臺中市梧棲區中央路一段681號", area: "梧棲區", kind: "米糕／肉羹湯", hours: "11:00–19:30", phone: "04-2657-9768", note: "米糕上鋪一整圈焢肉；原名王牌清水筒仔米糕", src: "https://nash.tw/letsgoangelringricegogo/", srcName: "Nash 部落格" },
-    { name: "清水筒仔米糕", address: "臺中市梧棲區文化路二段212號", area: "梧棲區", kind: "米糕／乾麵／肉羹湯", hours: "08:00–19:30（舊資料）", phone: "04-2657-4671", note: "在地 20 多年的老店；價格以現場為準", src: "https://shin.tw/wuci-shimizu-cakes/", srcName: "阿新筆記" },
-    { name: "順興芋冰老店", address: "臺中市梧棲區中央路二段2之7號", area: "梧棲區", kind: "冰品", hours: "10:30–17:30", phone: "", note: "老字號芋冰", src: "https://ifoodie.tw/explore/%E5%8F%B0%E4%B8%AD%E5%B8%82/list/%E6%A2%A7%E6%A3%B2%E4%B8%AD%E5%A4%AE%E8%B7%AF", srcName: "愛食記" },
-    { name: "今日小吃", address: "臺中市梧棲區文化路二段71號", area: "梧棲區", kind: "麵店", hours: "17:00–21:00（週六、日休）", phone: "", note: "只賣晚餐", src: "https://fbuon.com/blog/post/wuqi-todaysnacks", srcName: "天生寶家族" },
-    { name: "鐵將創意鐵板料理", address: "臺中市梧棲區文化路二段63號", area: "梧棲區", kind: "鐵板燒", hours: "待確認", phone: "", note: "附自助吧，一人約 320 元起，適合聚餐", src: "https://taiwan17go.com/w962/", srcName: "熱血台中" },
-    { name: "梧棲小鎮 總店", address: "臺中市梧棲區中興路148號", area: "梧棲區", kind: "伴手禮／鹹蛋糕", hours: "08:00–20:30", phone: "04-2658-4035", note: "海線起家的鹹蛋糕品牌", src: "https://shin.tw/wuchitown/", srcName: "阿新筆記" },
-    { name: "梧棲漁港觀光魚市", address: "臺中市梧棲區梧棲漁港", area: "梧棲區", kind: "海鮮／漁港小吃", hours: "依攤位而定", phone: "", note: "阿姿燒酒螺 10:00–19:00；中港烤魷魚 09:00–20:00", src: "https://gofunit.com/%E6%A2%A7%E6%A3%B2%E6%BC%81%E6%B8%AF/", srcName: "好好玩 FUNIT" },
-  ];
-
-  const listEl = document.getElementById("list");
+(function () {
+  "use strict";
+  const DATA = window.FOOD_DATA;
+  const AREA = Object.fromEntries(DATA.areas.map(a => [a.id, a]));
+  const $ = id => document.getElementById(id);
   const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-  const mapUrl = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.name + " " + p.address);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
 
-  function render(area) {
-    listEl.replaceChildren();
-    PLACES.filter(p => area === "all" || p.area === area).forEach(p => {
-      const li = mk("li", "place");
-      const head = mk("div", "place-head");
-      head.append(mk("h3", "place-name", p.name), mk("span", "chip " + (p.area === "梧棲區" ? "wq" : "qs"), p.area === "梧棲區" ? "梧棲" : "清水・槺榔里"), mk("span", "chip kind", p.kind));
-      const dl = mk("dl");
-      const row = (k, v) => { const dd = mk("dd", v.includes("待確認") ? "tbc" : "", v); dl.append(mk("dt", "", k), dd); };
-      row("地址", p.address);
-      row("時間", p.hours);
-      if (p.phone) row("電話", p.phone);
-      row("特色", p.note);
-      const actions = mk("div", "actions");
-      const a = mk("a", "btn-map", "在 Google 地圖開啟");
-      a.href = mapUrl(p); a.target = "_blank"; a.rel = "noopener";
-      const src = mk("span", "src", "資料來源：");
-      const sa = mk("a", "", p.srcName); sa.href = p.src; sa.target = "_blank"; sa.rel = "noopener";
-      src.append(sa);
-      actions.append(a, src);
-      li.append(head, dl, actions);
-      listEl.append(li);
-    });
+  // ---------- 狀態 ----------
+  const state = {
+    q: "", area: "all", kind: "all", onlyOpen: false, onlyFav: false,
+    favs: new Set(store.get("foodmap:favs", [])),
+    mapsOpen: new Set(),
+  };
+
+  // ---------- 營業時間（以台灣時間計算） ----------
+  const tpe = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Taipei", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const WD = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+  function nowTpe(date) {
+    const parts = Object.fromEntries(tpe.formatToParts(date || new Date()).map(p => [p.type, p.value]));
+    return { day: WD[parts.weekday], min: Number(parts.hour) * 60 + Number(parts.minute) };
+  }
+  function openStatus(p, now) {
+    if (!p.hours.length) return { key: "unknown", text: "時間未知" };
+    const today = p.hours.filter(([days]) => days.includes(now.day)).map(([, s, e]) => [toMin(s), toMin(e), e]).sort((a, b) => a[0] - b[0]);
+    const cur = today.find(([s, e]) => now.min >= s && now.min < e);
+    if (cur) {
+      const left = cur[1] - now.min;
+      return { key: "open", text: left <= 60 ? "營業中・" + left + " 分後打烊" : "營業中・至 " + cur[2] };
+    }
+    const next = today.find(([s]) => s > now.min);
+    if (next) return { key: "closed", text: "今天 " + String(Math.floor(next[0] / 60)).padStart(2, "0") + ":" + String(next[0] % 60).padStart(2, "0") + " 開" };
+    if (!today.length && p.closedKnown) return { key: "closed", text: "今天公休" };
+    return { key: "closed", text: "今日已打烊" };
   }
 
-  document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
-    document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-    render(b.dataset.area);
-  }));
+  // ---------- 篩選 ----------
+  const norm = s => s.toLowerCase().replace(/[臺]/g, "台").replace(/\s+/g, "");
+  function matches(p, now) {
+    if (state.area !== "all" && p.area !== state.area) return false;
+    if (state.kind !== "all" && p.kind !== state.kind) return false;
+    if (state.onlyFav && !state.favs.has(p.id)) return false;
+    if (state.onlyOpen && openStatus(p, now).key !== "open") return false;
+    if (state.q) {
+      const hay = norm([p.name, p.kind, p.address, p.note, AREA[p.area].name].join(" "));
+      if (!norm(state.q).split(/[,，、]/).filter(Boolean).every(t => hay.includes(t))) return false;
+    }
+    return true;
+  }
 
-  const q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
-  const csv = [["名稱", "地址", "地區", "類型", "營業時間", "電話", "備註"]]
-    .concat(PLACES.map(p => [p.name, p.address, p.area, p.kind, p.hours, p.phone, p.note]))
-    .map(r => r.map(q).join(",")).join("\n");
-  const ta = document.getElementById("csv-text");
-  ta.value = csv;
+  // ---------- 連結 ----------
+  const query = p => p.name + " " + p.address;
+  const navUrl = p => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(query(p));
+  const searchUrl = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query(p));
+  const embedUrl = p => "https://maps.google.com/maps?q=" + encodeURIComponent(p.address) + "&hl=zh-TW&z=16&output=embed";
 
-  const status = document.getElementById("copy-status");
-  document.getElementById("copy-btn").addEventListener("click", () => {
-    const fallback = () => { ta.focus(); ta.select(); status.textContent = "已選取全部資料，請按複製。"; };
-    try {
-      navigator.clipboard.writeText(csv).then(() => { status.textContent = "已複製 " + PLACES.length + " 筆資料。"; }, fallback);
-    } catch (e) { fallback(); }
+  // ---------- 提示 ----------
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  }
+  async function copyText(text, okMsg, fallbackEl) {
+    try { await navigator.clipboard.writeText(text); toast(okMsg); return true; }
+    catch (e) { if (fallbackEl) { fallbackEl.focus(); fallbackEl.select(); } toast("請手動選取後複製"); return false; }
+  }
+
+  // ---------- 卡片 ----------
+  function card(p, now) {
+    const li = mk("li", "place"); li.id = "p-" + p.id;
+    const top = mk("div", "place-top");
+    const title = mk("div", "place-title");
+    title.append(mk("h3", "place-name", p.name));
+    const tags = mk("div", "tags");
+    const st = openStatus(p, now);
+    tags.append(mk("span", "tag status " + st.key, st.text), mk("span", "tag a-" + p.area, AREA[p.area].name), mk("span", "tag kind", p.kind));
+    title.append(tags);
+    const fav = mk("button", "fav", state.favs.has(p.id) ? "★" : "☆");
+    fav.type = "button";
+    fav.setAttribute("aria-pressed", String(state.favs.has(p.id)));
+    fav.setAttribute("aria-label", (state.favs.has(p.id) ? "取消收藏 " : "收藏 ") + p.name);
+    fav.addEventListener("click", () => toggleFav(p));
+    top.append(title, fav);
+
+    const dl = mk("dl");
+    const addr = mk("dd", "addr");
+    addr.append(mk("span", "", p.address));
+    const cp = mk("button", "copy-addr", "複製"); cp.type = "button";
+    cp.setAttribute("aria-label", "複製地址：" + p.address);
+    cp.addEventListener("click", () => copyText(p.address, "已複製地址"));
+    addr.append(cp);
+    dl.append(mk("dt", "", "地址"), addr);
+    dl.append(mk("dt", "", "時間"), mk("dd", p.hoursText.includes("待確認") || !p.hours.length ? "tbc" : "", p.hoursText));
+    if (p.phone) {
+      const dd = mk("dd"); const a = mk("a", "", p.phone); a.href = "tel:" + p.phone.replace(/[^0-9+]/g, ""); dd.append(a);
+      dl.append(mk("dt", "", "電話"), dd);
+    }
+    dl.append(mk("dt", "", "特色"), mk("dd", "", p.note));
+
+    const actions = mk("div", "actions");
+    const nav = mk("a", "btn-solid", "導航"); nav.href = navUrl(p); nav.target = "_blank"; nav.rel = "noopener";
+    const mapBtn = mk("button", "btn-line", state.mapsOpen.has(p.id) ? "收起地圖" : "看地圖"); mapBtn.type = "button";
+    mapBtn.setAttribute("aria-expanded", String(state.mapsOpen.has(p.id)));
+    const gm = mk("a", "btn-line", "Google 地圖頁"); gm.href = searchUrl(p); gm.target = "_blank"; gm.rel = "noopener";
+    actions.append(nav, mapBtn, gm);
+
+    const mapBox = mk("div", "map-box"); mapBox.hidden = !state.mapsOpen.has(p.id);
+    const fillMap = () => {
+      mapBox.replaceChildren();
+      if (!navigator.onLine) { mapBox.append(mk("p", "", "目前離線，連上網路後再打開地圖。")); return; }
+      const f = document.createElement("iframe");
+      f.src = embedUrl(p); f.loading = "lazy"; f.title = p.name + " 的位置地圖";
+      f.referrerPolicy = "no-referrer-when-downgrade";
+      mapBox.append(f);
+    };
+    if (state.mapsOpen.has(p.id)) fillMap();
+    mapBtn.addEventListener("click", () => {
+      const open = !state.mapsOpen.has(p.id);
+      open ? state.mapsOpen.add(p.id) : state.mapsOpen.delete(p.id);
+      mapBox.hidden = !open; mapBtn.textContent = open ? "收起地圖" : "看地圖"; mapBtn.setAttribute("aria-expanded", String(open));
+      if (open) fillMap(); else mapBox.replaceChildren();
+    });
+
+    const src = mk("p", "src", "資料來源：");
+    p.sources.forEach(([name, url], i) => {
+      if (i) src.append("、");
+      const a = mk("a", "", name); a.href = url; a.target = "_blank"; a.rel = "noopener"; src.append(a);
+    });
+    li.append(top, dl, actions, mapBox, src);
+    return li;
+  }
+
+  // ---------- 繪製 ----------
+  function renderChips(now) {
+    const areaBox = $("area-chips"), kindBox = $("kind-chips");
+    const base = DATA.places.filter(p => (!state.onlyFav || state.favs.has(p.id)));
+    const chip = (box, label, val, cur, count, onPick) => {
+      const b = mk("button"); b.type = "button";
+      b.append(label); if (count != null) b.append(mk("span", "count", " " + count));
+      b.setAttribute("aria-pressed", String(val === cur));
+      b.addEventListener("click", () => onPick(val));
+      box.append(b);
+    };
+    areaBox.replaceChildren(); kindBox.replaceChildren();
+    chip(areaBox, "全部地區", "all", state.area, base.length, v => { state.area = v; render(); });
+    DATA.areas.forEach(a => chip(areaBox, a.name, a.id, state.area, base.filter(p => p.area === a.id).length, v => { state.area = v; render(); }));
+    const inArea = base.filter(p => state.area === "all" || p.area === state.area);
+    chip(kindBox, "全部類型", "all", state.kind, null, v => { state.kind = v; render(); });
+    DATA.kinds.filter(k => inArea.some(p => p.kind === k) || state.kind === k)
+      .forEach(k => chip(kindBox, k, k, state.kind, inArea.filter(p => p.kind === k).length, v => { state.kind = v; render(); }));
+  }
+
+  function render() {
+    const now = nowTpe();
+    renderChips(now);
+    const shown = DATA.places.filter(p => matches(p, now));
+    // 營業中的排前面，其次依原本順序
+    const rank = p => ({ open: 0, closed: 1, unknown: 2 })[openStatus(p, now).key];
+    shown.sort((a, b) => rank(a) - rank(b) || DATA.places.indexOf(a) - DATA.places.indexOf(b));
+    const list = $("list"); list.replaceChildren();
+    if (!shown.length) {
+      const e = mk("li", "empty");
+      e.append(mk("p", "", state.onlyFav && !state.favs.size ? "還沒有收藏的店家。按卡片右上角的 ☆ 就能收藏。" : "沒有符合條件的店家。"));
+      const reset = mk("button", "btn-line", "清除所有篩選"); reset.type = "button";
+      reset.addEventListener("click", resetFilters);
+      e.append(reset); list.append(e);
+    } else {
+      shown.forEach(p => list.append(card(p, now)));
+    }
+    const openCount = DATA.places.filter(p => openStatus(p, now).key === "open").length;
+    $("result-line").textContent = "顯示 " + shown.length + " / " + DATA.places.length + " 家・現在約 " + openCount + " 家營業中";
+    renderRoute();
+  }
+
+  function resetFilters() {
+    Object.assign(state, { q: "", area: "all", kind: "all", onlyOpen: false, onlyFav: false });
+    $("q").value = ""; $("q-clear").hidden = true; $("only-open").checked = false; $("only-fav").checked = false;
+    saveFilters(); render();
+  }
+
+  // ---------- 收藏與路線 ----------
+  function toggleFav(p) {
+    state.favs.has(p.id) ? state.favs.delete(p.id) : state.favs.add(p.id);
+    store.set("foodmap:favs", [...state.favs]);
+    toast(state.favs.has(p.id) ? "已收藏 " + p.name : "已取消收藏");
+    render();
+    const btn = document.querySelector("#p-" + p.id + " .fav"); if (btn) btn.focus();
+  }
+  function renderRoute() {
+    const favs = DATA.places.filter(p => state.favs.has(p.id));
+    const btn = $("route-btn"), clear = $("fav-clear"), desc = $("route-desc");
+    clear.hidden = !favs.length;
+    if (!favs.length) { btn.hidden = true; desc.textContent = "按店家右上角的 ☆ 收藏，就能一次規劃路線，從你目前的位置依序前往。"; return; }
+    const stops = favs.slice(0, 10); // Google 地圖最多 9 個中途點＋終點
+    const dest = stops[stops.length - 1], ways = stops.slice(0, -1);
+    let url = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(query(dest));
+    if (ways.length) url += "&waypoints=" + ways.map(w => encodeURIComponent(query(w))).join("%7C");
+    btn.href = url; btn.hidden = false;
+    desc.textContent = "已收藏 " + favs.length + " 家：" + favs.map(p => p.name).join("、") + (favs.length > 10 ? "（路線只會帶入前 10 家）" : "") + "。";
+  }
+  $("fav-clear").addEventListener("click", () => {
+    state.favs.clear(); store.set("foodmap:favs", []); toast("已清除收藏"); render();
   });
 
-  render("all");
+  // ---------- 控制項 ----------
+  function saveFilters() { store.set("foodmap:filters", { area: state.area, kind: state.kind, onlyOpen: state.onlyOpen, onlyFav: state.onlyFav }); }
+  const saved = store.get("foodmap:filters", null);
+  if (saved) {
+    if (saved.area === "all" || AREA[saved.area]) state.area = saved.area;
+    if (saved.kind === "all" || DATA.kinds.includes(saved.kind)) state.kind = saved.kind;
+    state.onlyOpen = !!saved.onlyOpen; state.onlyFav = !!saved.onlyFav;
+    $("only-open").checked = state.onlyOpen; $("only-fav").checked = state.onlyFav;
+  }
+  let qTimer;
+  $("q").addEventListener("input", e => {
+    $("q-clear").hidden = !e.target.value;
+    clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value.trim(); render(); }, 120);
+  });
+  $("q-clear").addEventListener("click", () => { $("q").value = ""; $("q-clear").hidden = true; state.q = ""; render(); $("q").focus(); });
+  $("only-open").addEventListener("change", e => { state.onlyOpen = e.target.checked; saveFilters(); render(); });
+  $("only-fav").addEventListener("change", e => { state.onlyFav = e.target.checked; saveFilters(); render(); });
+  // 地區、類型按鈕在 renderChips 內綁定；選擇後也要記住
+  const origRender = render;
+  render = function () { saveFilters(); origRender(); };
+
+  // ---------- CSV ----------
+  const q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  const csv = [["名稱", "地址", "地區", "類型", "營業時間", "電話", "備註"]]
+    .concat(DATA.places.map(p => [p.name, p.address, AREA[p.area].name, p.kind, p.hoursText, p.phone, p.note]))
+    .map(r => r.map(q).join(",")).join("\n");
+  $("csv-text").value = csv;
+  $("copy-btn").addEventListener("click", async () => {
+    const ok = await copyText(csv, "已複製 " + DATA.places.length + " 筆資料", $("csv-text"));
+    if (!ok) $("csv-text").closest("details").open = true;
+  });
+
+  // ---------- 分享 ----------
+  $("share-btn").addEventListener("click", async () => {
+    const data = { title: document.title, text: "槺榔、中社路與梧棲一帶的美食清單", url: location.href.split("#")[0] };
+    if (navigator.share) { try { await navigator.share(data); return; } catch (e) { if (e.name === "AbortError") return; } }
+    copyText(data.url, "已複製網址");
+  });
+
+  // ---------- 頁首資訊 ----------
+  $("meta-line").textContent = "共 " + DATA.places.length + " 家・" + DATA.areas.length + " 個區域・資料整理於 " + DATA.updated;
+
+  // 每分鐘更新營業狀態
+  setInterval(() => { if (!document.hidden) origRender(); }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) origRender(); });
 
   // ---------- PWA：離線快取與安裝 ----------
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    });
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
   }
-  const offlineEl = document.getElementById("offline");
-  const syncOnline = () => { offlineEl.hidden = navigator.onLine; };
+  const syncOnline = () => { $("offline").hidden = navigator.onLine; };
   window.addEventListener("online", syncOnline);
   window.addEventListener("offline", syncOnline);
   syncOnline();
 
   const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   let deferredPrompt = null;
-  const installBox = document.getElementById("install");
-  window.addEventListener("beforeinstallprompt", e => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBox.hidden = false;
-  });
-  document.getElementById("install-btn").addEventListener("click", async () => {
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; $("install").hidden = false; });
+  $("install-btn").addEventListener("click", async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBox.hidden = true;
+    deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $("install").hidden = true;
   });
-  window.addEventListener("appinstalled", () => { installBox.hidden = true; });
-  if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
-    document.getElementById("ios-hint").hidden = false;
-  }
+  window.addEventListener("appinstalled", () => { $("install").hidden = true; });
+  if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) $("ios-hint").hidden = false;
+
+  // 供測試使用
+  window.__foodmap = { openStatus, nowTpe };
+
+  render();
+})();
 </script>
 </body>
 </html>
