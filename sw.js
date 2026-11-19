@@ -1,6 +1,6 @@
 // 每日股市分析報告：離線快取（只快取網頁本身；證交所資料不經此快取，改由頁面存上次結果）
 // 更新網頁內容時，請把 CACHE 的版本號加 1，讓使用者拿到新版。
-const CACHE = "stock-report-v3";
+const CACHE = "stock-report-v4";
 const ASSETS = [
   "./", "./index.html", "./analysis.js", "./sample-data.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png",
@@ -20,7 +20,7 @@ self.addEventListener("activate", (event) => {
 
 // 同一個網站底下還有其他獨立的網頁（例如 food-map/ 美食地圖），它們有自己的離線程式。
 // 這裡只處理股市報告自己的檔案，其他子資料夾一律不攔截，避免離線時被換成股市報告。
-const OTHER_APPS = ["food-map/"];
+const OTHER_APPS = ["food-map/", "reports/"];
 const BASE = new URL("./", self.location).pathname;            // 例如 /csl54/
 const isOtherApp = (path) => OTHER_APPS.some((dir) => path.startsWith(BASE + dir));
 const isReportPage = (path) => path === BASE || path === BASE + "index.html";

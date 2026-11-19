@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>量具檢具配合件需求表</title>
+<meta name="description" content="產品量具、檢具及配合件需求表 Excel 下載：空白表格與虛構範例。">
+<meta name="color-scheme" content="light dark">
+<style>
+  /* 版面：單欄下載頁。兩張檔案卡片＋表格內容說明 */
+  :root {
+    --bg: #f2f4f7; --surface: #ffffff; --fg: #1a2433; --muted: #566273; --line: #d8dee6;
+    --accent: #1f4e79; --accent-fg: #ffffff; --accent-soft: #e6eef6; --warn: #8a4b00; --warn-bg: #fff3e0;
+    --font: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e141b; --surface: #16202b; --fg: #e3e9f0; --muted: #9aa8b8; --line: #283545;
+      --accent: #7fb3e3; --accent-fg: #0b1622; --accent-soft: #1a2c40; --warn: #f3b46b; --warn-bg: #352512;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e141b; --surface: #16202b; --fg: #e3e9f0; --muted: #9aa8b8; --line: #283545;
+    --accent: #7fb3e3; --accent-fg: #0b1622; --accent-soft: #1a2c40; --warn: #f3b46b; --warn-bg: #352512;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.6;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: max(28px, env(safe-area-inset-top, 0px)) max(40px, env(safe-area-inset-bottom, 0px));
+  }
+  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+  h1 { font-size: 1.6rem; line-height: 1.3; margin: 0; text-wrap: balance; }
+  h2 { font-size: 1.1rem; margin: 0; }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 62ch; margin-top: 6px; }
+  .files { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .file { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 8px; min-width: 0; align-content: start; }
+  .file .tag { justify-self: start; font-size: 0.8rem; padding: 1px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .file p { color: var(--muted); font-size: 0.95rem; }
+  .btn {
+    justify-self: start; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; margin-top: 4px;
+    border-radius: 8px; background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 700;
+  }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .meta { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 700; white-space: nowrap; }
+  .notice { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; }
+  footer { color: var(--muted); font-size: 0.85rem; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>產品量具、檢具及配合件需求表</h1>
+    <p class="lede">每個產品的每個量測項目一列，列出規格公差，以及需要的量具、檢具與配合件。填編號就會自動帶出名稱、校正到期日與狀態，並彙總每個產品是否可生產檢驗。</p>
+  </header>
+
+  <section class="files" aria-label="下載">
+    <article class="file">
+      <span class="tag">空白表格</span>
+      <h2>直接填寫用</h2>
+      <p>沒有任何資料，框線、下拉清單與公式都已設定好。「說明」工作表有填寫步驟與範例。</p>
+      <a class="btn" href="%E9%87%8F%E5%85%B7%E6%AA%A2%E5%85%B7%E9%85%8D%E5%90%88%E4%BB%B6%E9%9C%80%E6%B1%82%E8%A1%A8_%E7%A9%BA%E7%99%BD.xlsx" download>下載空白表格</a>
+      <p class="meta">Excel（.xlsx）・約 65 KB</p>
+    </article>
+    <article class="file">
+      <span class="tag">範例</span>
+      <h2>對照參考用</h2>
+      <p>3 個虛構產品、16 個量測項目，示範各欄位怎麼填，以及過期、即將到期的顯示效果。</p>
+      <a class="btn" href="%E9%87%8F%E5%85%B7%E6%AA%A2%E5%85%B7%E9%85%8D%E5%90%88%E4%BB%B6%E9%9C%80%E6%B1%82%E8%A1%A8_%E7%AF%84%E4%BE%8B.xlsx" download>下載範例</a>
+      <p class="meta">Excel（.xlsx）・約 62 KB</p>
+    </article>
+  </section>
+
+  <section class="panel" aria-labelledby="sheets-title">
+    <h2 id="sheets-title">檔案內的工作表</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>工作表</th><th>內容</th></tr></thead>
+        <tbody>
+          <tr><td>需求表</td><td>主報表：產品、量測項目、規格公差、量具、檢具、配合件、檢驗頻率</td></tr>
+          <tr><td>量具清單</td><td>量具編號、量程、精度、校正週期；自動算出下次校正日與狀態</td></tr>
+          <tr><td>檢具清單</td><td>專用檢具、適用產品、驗證週期；自動算出下次驗證日與狀態</td></tr>
+          <tr><td>配合件清單</td><td>配合件料號、配合產品、配合方式、版次、保管位置</td></tr>
+          <tr><td>彙總</td><td>每個產品的項目數、過期與 30 天內到期數量、可否生產檢驗</td></tr>
+          <tr><td>說明</td><td>欄位顏色、填寫方式與範例</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="notice">這個網站是公開的，任何人都能下載這兩個檔案。範例內容全部虛構；填入公司實際資料後，請存在公司內部，不要再上傳到這裡。</p>
+
+  <footer>
+    <p>同網站的其他頁面：<a href="../">每日股市分析報告</a>・<a href="../food-map/">槺榔・梧棲 美食地圖</a></p>
+  </footer>
+</div>
+</body>
+</html>
